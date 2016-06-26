@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+	<title>The Sentence Game - Play!</title>
+
+	<link type="text/css" rel="stylesheet" href="../css/stylesheet.css" />
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans Condensed:300italic,300,700" rel="stylesheet" type="text/css">
+
+
+</head>
+
+<body>
+
+	<audio preload="auto">
+		<source id="wav" src="../tone.mp3" />
+	</audio>
+
+	<div class="game-ended" style="display:none">
+
+		<h2>Game has ended</h2>
+
+
+		<div id="fullstory">
+
+
+			<h2><a href="/">Back to home</a></h2>
+
+		</div>
+
+	</div>
+
+
+
+	<section class="section">
+
+		<!-- These elements are displayed as white info cards in the middle of the screen -->
+
+		<div class="connected">
+
+			<img src="../img/unnamed.jpg" id="creatorImage" />
+
+			<div class="infoConnected">
+				<h2>Who are you?</h2>
+				<br/>
+
+				<form class="loginForm">
+					<input type="text" id="yourName" placeholder="Your nick name" /><br/>
+					Number of turns:
+					<select id="gameLines">
+						<option value = "5">5</option>
+						<option value = "2">2</option>
+						<option value = "10">10</option>
+					</select><br/><br/>
+					<input type="submit" id="yourEnter" value="ENTER" />
+				</form>
+
+			</div>
+
+		</div>
+
+		<div class="personinside">
+
+			<img src="../img/unnamed.jpg" id="ownerImage" />
+
+			<div class="infoInside">
+				<h2>Play with <span class="nickname-chat"></span></h2>
+				<br/>
+
+				<form class="loginForm">
+					<input type="text" id="hisName" placeholder="Your nick name" /><br/>
+					<input type="submit" id="hisEnter" value="Play" />
+				</form>
+
+			</div>
+
+		</div>
+
+		<div class="invite-textfield">
+
+			<h2>Oops, there are no other people in this game!</h2>
+			<h5>Invite a friend by sending them this URL</h5>
+
+			<div class="link">
+				<a title="Invite a friend" href="" id="link"></a>
+			</div>
+
+		</div>
+
+
+		<div class="left">
+
+			<img src="../img/unnamed.jpg" id="leftImage" />
+
+			<div class="info">
+				<h2><span class="nickname-left"></span> has left this game.</h2>
+				<h5>Invite somebody else by sending them this page.</h5>
+			</div>
+
+		</div>
+
+		<div class="toomanypeople">
+
+			<h2>Oops, you can not join this game!</h2>
+			<h5>There are already two people in it. Would you like to create a <a title="New Room" href="/create" id="room">new room</a>?</h5>
+
+		</div>
+
+		<div class="nomessages">
+
+			<img src="../img/unnamed.jpg" id="noMessagesImage" />
+
+			<div class="info">
+				<h2>You are playing with <span class="nickname-chat"></span>.</h2>
+				<h5>Send them a message from the form below on your turn!</h5>
+			</div>
+
+		</div>
+
+		<div class="chatscreen">
+
+			<ul class="chats">
+				<!-- The chat messages will go here -->
+			</ul>
+
+		</div>
+
+
+
+	</section>
+
+	<footer>
+
+		<div id="clockdiv">
+			<div>
+				<span class="minutes"></span>
+				<div class="smalltext">Minutes</div>
+			</div>
+			<div>
+				<span class="seconds"></span>
+				<div class="smalltext">Seconds</div>
+			</div>
+
+		</div>
+
+		<div class="players" id="players">
+			<li>
+				sdfsfsd
+			</li>
+
+		</div>
+
+
+		<form id="chatform">
+
+			<textarea id="message" placeholder="Write something.."></textarea>
+			<input type="submit" id="submit" value="SEND"/>
+
+		</form>
+
+
+
+	</footer>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<script src="../js/moment.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="../js/gamepage.js"></script>
+
+</body>
+
+</html>
