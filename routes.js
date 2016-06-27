@@ -1,6 +1,3 @@
-
-
-
 module.exports = function (app, io) {
 
     var gpsdb = require('./gpsdb.js');
@@ -31,4 +28,17 @@ module.exports = function (app, io) {
             })
         }
     });
+
+    var gpsio = io.on('connection', function(socket) {
+        socket.on('queryGPSID', function (id) {
+            gpsdb.getSingleGPSData(id, function(err, data) {
+                if (!err) {
+                    data.sort(function(a,b) {
+                        return new Date(a.date) - new Date(b.date);
+                    });
+                }
+                socket.emit('queryGPSIDResponse', {err: err, data: data});
+            });
+        })
+    })
 };
