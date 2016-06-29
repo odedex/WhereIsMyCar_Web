@@ -20,7 +20,7 @@ module.exports.getSingleGPSData = function (id, callback) {
     if (gpsDB) {
         gpsDB.collection(id).find().toArray(function(err, items) {
             return callback (err, items);
-        })
+        });
     } else {
         return callback("db is down", null);
     }

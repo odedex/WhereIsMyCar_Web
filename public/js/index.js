@@ -5,6 +5,7 @@ $(function() {
     var sendButton = $("#sendButton");
     var gpsidInput = $("#gpsidInput");
     var routeSteps = $("#routeSteps");
+    var errorMsg = $("#errorMsg");
 
     // map related variables
     var markers = [];
@@ -25,19 +26,19 @@ $(function() {
             sendButton.prop("disabled", true);
             socket.emit("queryGPSID", gpsidInput.val());
         } else {
-            alert("please enter an id!");
+            setErrMsg("please enter an id!");
         }
     });
 
     socket.on('queryGPSIDResponse', function(response) {
        if (response.err) {
-           alert("an error occured");
-       }  else {
+           setErrMsg("an error occured");
+       } else {
            // console.log(response.data);
            if (response.data.length > 0) {
                clear();
            } else {
-               alert("given ID has no results!")
+               setErrMsg("given ID has no results!")
            }
            response.data.forEach(function(loc) {
                var latlng = new google.maps.LatLng({lat: parseFloat(loc.lat), lng: parseFloat(loc.lng)});
@@ -63,6 +64,8 @@ $(function() {
 
         bounds = new google.maps.LatLngBounds();
         fitMap();
+
+        setErrMsg();
     }
 
     function fitMap() {
@@ -136,6 +139,15 @@ $(function() {
     function addStepAndMarker(pos, time) {
         var marker = createMarker(pos);
         addRouteStep(time, marker);
+    }
+
+    function setErrMsg(msg) {
+        if (msg) {
+            errorMsg.html(msg);
+        } else {
+            errorMsg.html("")
+        }
+
     }
     
     
