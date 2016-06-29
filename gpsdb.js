@@ -9,7 +9,7 @@ var ready = 0;
 MongoClient.connect("mongodb://odedex:odedab17@ds040309.mlab.com:40309/wheremycar", function(err, db) {
     if(err) {
         ready = -1;
-        return console.error(err);
+        console.error(err);
     } else {
         gpsDB = db;
         ready = 1;
@@ -22,16 +22,14 @@ module.exports.getSingleGPSData = function (id, callback) {
             return callback (err, items);
         })
     } else {
-        return callback("db did not start properly.", null);
+        return callback("db is down", null);
     }
 };
 
 module.exports.getAllGPSData = function (callback) {
     if (gpsDB) {
         gpsDB.listCollections().toArray(function(err, collections) {
-            if (err) {
-                return callback(err, collections);
-            }
+            return callback(err, collections);
         });
     } else {
         return callback("db is down", null);
