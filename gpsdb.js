@@ -19,12 +19,12 @@ MongoClient.connect("mongodb://odedex:odedab17@ds040309.mlab.com:40309/wheremyca
 module.exports.getSingleGPSData = function (id, callback) {
     if (gpsDB) {
         gpsDB.collection(id).find().toArray(function(err, items) {
-            callback (err, items);
+            return callback (err, items);
         })
     } else {
-        callback("db did not start properly.", null);
+        return callback("db did not start properly.", null);
     }
-}
+};
 
 module.exports.getAllGPSData = function (callback) {
     if (gpsDB) {
@@ -43,7 +43,7 @@ module.exports.addGPSEntry = function (id, entry, callback) {
     if (gpsDB) {
         gpsDB.collection(id).insertOne(entry, {w:1}, function(err, result) {
             if (callback) {
-                callback (err, result);
+                return callback (err, result);
             }
         });
     } else {
@@ -67,8 +67,8 @@ module.exports.isUp = function (){
 module.exports.clearDB = function () {
     if (gpsDB) {
         gpsDB.dropDatabase();
-        console.log("collection was deleted");
+        console.log("db is now cleared");
     } else {
-        console.log("collection was not deleted");
+        console.log("db was not cleared");
     }
 };
