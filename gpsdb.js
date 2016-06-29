@@ -9,49 +9,32 @@ var ready = 0;
 MongoClient.connect("mongodb://odedex:odedab17@ds040309.mlab.com:40309/wheremycar", function(err, db) {
     if(err) {
         ready = -1;
-        return console.dir(err);
+        return console.error(err);
     } else {
         gpsDB = db;
         ready = 1;
     }
 });
 
-
-function getSingleCollection (id, callback) {
-    if (ready === 1) {
-
+module.exports.getSingleGPSData = function (id, callback) {
+    if (gpsDB) {
         gpsDB.collection(id).find().toArray(function(err, items) {
             callback (err, items);
         })
-    } else if (ready === 0){
-        console.log("db still not up. retrying...");
-        setTimeout(function() {
-            getSingleCollection(callback);
-        }, 200);
     } else {
         callback("db did not start properly.", null);
     }
 }
-module.exports.getSingleGPSData = getSingleCollection;
 
-
-module.exports.printAllGPSData = function (callback) {
+module.exports.getAllGPSData = function (callback) {
     if (gpsDB) {
         gpsDB.listCollections().toArray(function(err, collections) {
             if (err) {
-                return callback(err);
+                return callback(err, collections);
             }
-            collections.forEach(function(coll) {
-                coll.find().toArray(function(err, items) {
-                    console.log(items);
-                    if (callback) {
-                        callback (err, items);
-                    }
-                })
-            })
         });
     } else {
-        console.log("db is down");
+        return callback("db is down", null);
     }
 };
 
@@ -64,17 +47,17 @@ module.exports.addGPSEntry = function (id, entry, callback) {
             }
         });
     } else {
-        console.log("db is down");
+        return callback("db is down", null);
     }
 };
 
 
 /**
- * Checks if the database is up and ready
- * @returns {boolean}
+ * Check if db is up and ready
+ * @returns {number} 0 if not yet init, -1 if init failed, 1 if up and ready
  */
 module.exports.isUp = function (){
-    return !(ready === 0);
+    return ready;
 };
 
 
