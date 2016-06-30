@@ -3,6 +3,9 @@ module.exports = function (app, io) {
     var gpsdb = require('./gpsdb.js');
 
     var NO_ID_ERR_MSG = "No such ID";
+    var FAILED_DB_WRITE_ERR_MSG = "Failed to write to database";
+    var SUCCESS_DB_WRITE_ERR_MSG = "Write to database was successful";
+    var BAD_FORMAT_ERR_MSG = "bad params. format is /update/:id/:timestamp/:lat/:lng";
 
 
     app.get('/', function (req, res) {
@@ -12,24 +15,43 @@ module.exports = function (app, io) {
 
 
     app.get('/update/:id/:timestamp/:lat/:lng', function (req, res) {
-        console.log("write request");
         var id = req.params.id,
             timestamp = req.params.timestamp,
             lat = req.params.lat,
             lng = req.params.lng;
         if (id && timestamp && lat && lng) {
-            gpsdb.addGPSEntry(id, {date:timestamp, lat: lat, lng: lng}, function(err) {
+            gpsdb.queryExistingDevice(id, function(err, exists) {
                 if (err) {
-                    console.error(err);
-                    res.write("Failed to write to database");
+                    res.status(500);
+                    res.write(FAILED_DB_WRITE_ERR_MSG);
+                    res.write(err.toString());
                     res.end();
                 } else {
-                    res.write("Write to database was successful");
-                    res.end();
+                    if (!exists) {
+                        res.status(400);
+                        res.write(FAILED_DB_WRITE_ERR_MSG);
+                        res.write(NO_ID_ERR_MSG);
+                        res.end();
+                    } else {
+                        gpsdb.addGPSEntry(id, {date:timestamp, lat: lat, lng: lng}, function(err) {
+                            if (err) {
+                                res.status(500);
+                                res.write(FAILED_DB_WRITE_ERR_MSG);
+                                res.write(err.toString());
+                                res.end();
+                            } else {
+                                res.status(200);
+                                res.write(SUCCESS_DB_WRITE_ERR_MSG);
+                                res.end();
+                            }
+                        })
+                    }
                 }
             })
+
         } else {
-            res.write("bad params. format is /update/:id/:timestamp/:lat/:lng");
+            res.status(400);
+            res.write(BAD_FORMAT_ERR_MSG);
             res.end();
         }
     });
