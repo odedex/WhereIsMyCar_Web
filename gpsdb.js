@@ -1,7 +1,13 @@
 // Retrieve
+
 var MongoClient = require('mongodb').MongoClient;
+
 var gpsDB;
 var ready = 0;
+var devicesCollection = "registeredDevicesInSystem";
+
+var DIFF_NAME_ERR_MSG = "Please choose a different name";
+var DB_DOWN_ERR_MSG = "Database is down";
 
 /**
  * Connect to the database
@@ -22,7 +28,7 @@ module.exports.getSingleGPSData = function (id, callback) {
             return callback (err, items);
         });
     } else {
-        return callback("db is down", null);
+        return callback(DB_DOWN_ERR_MSG);
     }
 };
 
@@ -32,7 +38,7 @@ module.exports.getAllGPSData = function (callback) {
             return callback(err, collections);
         });
     } else {
-        return callback("db is down", null);
+        return callback(DB_DOWN_ERR_MSG);
     }
 };
 
@@ -45,7 +51,39 @@ module.exports.addGPSEntry = function (id, entry, callback) {
             }
         });
     } else {
-        return callback("db is down", null);
+        return callback(DB_DOWN_ERR_MSG);
+    }
+};
+
+module.exports.registerNewDevice = function (id, callback) {
+    if (gpsDB) {
+        gpsDB.createCollection(id, function(err, collection) {
+            if (callback) {
+                return callback(err, collection);
+            }
+        });
+    } else {
+        if (callback) {
+            return callback(DB_DOWN_ERR_MSG);
+        }
+    }
+};
+
+module.exports.queryExistingDevice = function (id, callback) {
+    if (gpsDB) {
+        gpsDB.listCollections().toArray(function(err, collections) {
+            if (err){
+                return callback(err);
+            }
+            for (var i = 0 ; i < collections.length ; i += 1) {
+                if (collections[i].name === id) {
+                    return callback(err, true);
+                }
+            }
+            return callback(err, false);
+        });
+    } else {
+        return callback(DB_DOWN_ERR_MSG);
     }
 };
 
@@ -65,7 +103,7 @@ module.exports.isUp = function (){
 module.exports.clearDB = function () {
     if (gpsDB) {
         gpsDB.dropDatabase();
-        console.log("db is now cleared");
+        console.log("db is now clear");
     } else {
         console.log("db was not cleared");
     }

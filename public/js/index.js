@@ -20,7 +20,6 @@ $(function() {
     directionsDisplay.setOptions({suppressMarkers: true});
 
 
-
     sendButton.click(function() {
         if (gpsidInput.val()) {
             sendButton.prop("disabled", true);
@@ -30,9 +29,15 @@ $(function() {
         }
     });
 
+    gpsidInput.on('keypress', function(key) {
+        if (key.keyCode === 13) {
+            document.getElementById("sendButton").click();
+        }
+    });
+
     socket.on('queryGPSIDResponse', function(response) {
        if (response.err) {
-           setErrMsg("an error occured");
+           setErrMsg(response.err);
        } else {
            // console.log(response.data);
            if (response.data.length > 0) {
@@ -60,7 +65,7 @@ $(function() {
 
         // clear all route steps
         routeSteps.html("");
-        routeStep = 1; //TODO: this might be redundant
+        routeStep = 1;
 
         bounds = new google.maps.LatLngBounds();
         fitMap();

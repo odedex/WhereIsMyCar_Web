@@ -2,6 +2,8 @@ module.exports = function (app, io) {
 
     var gpsdb = require('./gpsdb.js');
 
+    var NO_ID_ERR_MSG = "No such ID";
+
 
     app.get('/', function (req, res) {
         // Render views/home.html
@@ -52,13 +54,19 @@ module.exports = function (app, io) {
 
     var gpsio = io.on('connection', function(socket) {
         socket.on('queryGPSID', function (id) {
-            gpsdb.getSingleGPSData(id, function(err, data) {
-                if (!err) {
-                    data.sort(function(a,b) {
-                        return new Date(a.date) - new Date(b.date);
+            gpsdb.queryExistingDevice(id, function (existsErr, exists) {
+                if (exists) {
+                    gpsdb.getSingleGPSData(id, function(err, data) {
+                        if (!err) {
+                            data.sort(function(a,b) {
+                                return new Date(a.date) - new Date(b.date);
+                            });
+                        }
+                        socket.emit('queryGPSIDResponse', {err: err, data: data});
                     });
+                } else {
+                    socket.emit('queryGPSIDResponse', {err: NO_ID_ERR_MSG});
                 }
-                socket.emit('queryGPSIDResponse', {err: err, data: data});
             });
         })
     })
