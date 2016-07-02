@@ -2,10 +2,14 @@ module.exports = function (app, io) {
 
     var gpsdb = require('./gpsdb.js');
 
-    var NO_ID_ERR_MSG = "No such ID";
-    var FAILED_DB_WRITE_ERR_MSG = "Failed to write to database";
-    var SUCCESS_DB_WRITE_ERR_MSG = "Write to database was successful";
-    var BAD_FORMAT_ERR_MSG = "bad params. format is /update/:id/:timestamp/:lat/:lng";
+    var NO_ID_ERR_MSG = "No such ID\r\n";
+    var FAILED_DB_OPER_ERR_MSG = "Database operation failed\r\n";
+    var FAILED_DB_WRITE_ERR_MSG = "Failed to write to database\r\n";
+    var SUCCESS_DB_WRITE_ERR_MSG = "Write to database was successful\r\n";
+    var BAD_UPDATE_FORMAT_ERR_MSG = "bad params. format is /update/:id/:timestamp/:lat/:lng\r\n";
+    var BAD_REGISTER_FORMAT_ERR_MSG = "bad params. format is /register/:id\r\n";
+    var ID_ALREADY_EXISTS_ERR_MSG = "ID is already in use\r\n";
+    var ID_REGISTER_SUCCESS_MSG = "ID successfully registered\r\n";
 
 
     app.get('/', function (req, res) {
@@ -22,27 +26,16 @@ module.exports = function (app, io) {
         if (id && timestamp && lat && lng) {
             gpsdb.queryExistingDevice(id, function(err, exists) {
                 if (err) {
-                    res.status(500);
-                    res.write(FAILED_DB_WRITE_ERR_MSG);
-                    res.write(err.toString());
-                    res.end();
+                    res.status(500).send(FAILED_DB_OPER_ERR_MSG + err.toString());
                 } else {
                     if (!exists) {
-                        res.status(400);
-                        res.write(FAILED_DB_WRITE_ERR_MSG);
-                        res.write(NO_ID_ERR_MSG);
-                        res.end();
+                        res.status(400).send(FAILED_DB_WRITE_ERR_MSG + NO_ID_ERR_MSG);
                     } else {
                         gpsdb.addGPSEntry(id, {date:timestamp, lat: lat, lng: lng}, function(err) {
                             if (err) {
-                                res.status(500);
-                                res.write(FAILED_DB_WRITE_ERR_MSG);
-                                res.write(err.toString());
-                                res.end();
+                                res.status(500).send(FAILED_DB_OPER_ERR_MSG + err.toString());
                             } else {
-                                res.status(200);
-                                res.write(SUCCESS_DB_WRITE_ERR_MSG);
-                                res.end();
+                                res.status(200).send(SUCCESS_DB_WRITE_ERR_MSG);
                             }
                         })
                     }
@@ -50,9 +43,33 @@ module.exports = function (app, io) {
             })
 
         } else {
-            res.status(400);
-            res.write(BAD_FORMAT_ERR_MSG);
-            res.end();
+            res.status(400).send(BAD_UPDATE_FORMAT_ERR_MSG);
+        }
+    });
+
+    //TODO: future work - implement functionality that avoids fake devices
+    app.get('/register/:id', function (req, res) {
+        var id = req.params.id;
+        if (id) {
+            gpsdb.queryExistingDevice(id, function(err, exists) {
+                if (err) {
+                    res.status(500).send(FAILED_DB_OPER_ERR_MSG + err.toString());
+                } else {
+                    if (exists) {
+                        res.status(400).send(ID_ALREADY_EXISTS_ERR_MSG);
+                    } else {
+                        gpsdb.registerNewDevice(id, function (registerErr) {
+                            if (registerErr) {
+                                res.status(500).send(FAILED_DB_OPER_ERR_MSG + registerErr.toString());
+                            } else {
+                                res.status(200).send(ID_REGISTER_SUCCESS_MSG);
+                            }
+                        })
+                    }
+                }
+            })
+        } else {
+            res.status(400).send(BAD_REGISTER_FORMAT_ERR_MSG);
         }
     });
     
