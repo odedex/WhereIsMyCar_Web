@@ -17,8 +17,12 @@ module.exports = function (app, io) {
         res.render('index');
     });
 
-
+    /**
+     * Add a new gps entry to an existing device
+     */
+    //TODO: future work - add support to make sure only the device can register new data for itself
     app.get('/update/:id/:timestamp/:lat/:lng', function (req, res) {
+        // Parse the input
         var id = req.params.id,
             timestamp = req.params.timestamp,
             lat = req.params.lat,
@@ -47,6 +51,9 @@ module.exports = function (app, io) {
         }
     });
 
+    /**
+     * Register a new device to the database
+     */
     //TODO: future work - implement functionality that avoids fake devices
     app.get('/register/:id', function (req, res) {
         var id = req.params.id;
