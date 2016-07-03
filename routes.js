@@ -45,7 +45,6 @@ module.exports = function (app, io) {
                     }
                 }
             })
-
         } else {
             res.status(400).send(BAD_UPDATE_FORMAT_ERR_MSG);
         }
@@ -99,19 +98,27 @@ module.exports = function (app, io) {
     }
 
     var gpsio = io.on('connection', function(socket) {
+
+        socket.existingRequest = false;
+        //TODO: there may be a bug where 'existingRequest' member is ignored (replicate by spamming 'enter' on input)
+        
         socket.on('queryGPSID', function (id) {
             gpsdb.queryExistingDevice(id, function (existsErr, exists) {
-                if (exists) {
-                    gpsdb.getSingleGPSData(id, function(err, data) {
-                        if (!err) {
-                            data.sort(function(a,b) {
-                                return new Date(a.date) - new Date(b.date);
-                            });
-                        }
-                        socket.emit('queryGPSIDResponse', {err: err, data: data});
-                    });
+                if (exists && !socket.existingRequest) {
+                    socket.existingRequest = true;
+                    gpsdb.getSingleGPSData(id, socket);
+
+
+                    // gpsdb.getSingleGPSData(id, function(err, data) {
+                    //     if (!err) {
+                    //         data.sort(function(a,b) {
+                    //             return new Date(a.date) - new Date(b.date);
+                    //         });
+                    //     }
+                    //     socket.emit('queryGPSIDResponse', {err: err, data: data});
+                    // });
                 } else {
-                    socket.emit('queryGPSIDResponse', {err: NO_ID_ERR_MSG});
+                    socket.emit('newGPSEntryError', {err: NO_ID_ERR_MSG});
                 }
             });
         })

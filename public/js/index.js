@@ -4,12 +4,15 @@ $(function() {
     // ui elements
     var sendButton = $("#sendButton");
     var gpsidInput = $("#gpsidInput");
-    var routeSteps = $("#routeSteps");
+    // var routeSteps = $("#routeSteps");
     var errorMsg = $("#errorMsg");
+
+    var routeSteps = document.getElementById("routeSteps");
+    var steps = [];
 
     // map related variables
     var markers = [];
-    var bounds = new google.maps.LatLngBounds();;
+    var bounds = new google.maps.LatLngBounds();
     var directionsDisplay = new google.maps.DirectionsRenderer;
     var infowindow = new google.maps.InfoWindow();
     var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -22,7 +25,8 @@ $(function() {
 
     sendButton.click(function() {
         if (gpsidInput.val()) {
-            sendButton.prop("disabled", true);
+            // sendButton.prop("disabled", true);
+            clear();
             socket.emit("queryGPSID", gpsidInput.val());
         } else {
             setErrMsg("please enter an id!");
@@ -35,6 +39,9 @@ $(function() {
         }
     });
 
+    /**
+     * @deprecated use newGPSEntry
+     */
     socket.on('queryGPSIDResponse', function(response) {
        if (response.err) {
            setErrMsg(response.err);
@@ -52,6 +59,15 @@ $(function() {
        }
         sendButton.prop("disabled", false);
     });
+    
+    socket.on('newGPSEntry', function(entry) {
+        var latlng = new google.maps.LatLng({lat: parseFloat(entry.lat), lng: parseFloat(entry.lng)});
+        addStepAndMarker(latlng, entry.date);
+    });
+
+    socket.on('newGPSEntryError', function(err) {
+        setErrMsg(err);
+    });
 
 
     function clear() {
@@ -64,11 +80,12 @@ $(function() {
         directionsDisplay.setDirections({geocoded_waypoints: [], routes: [], status: 'OK', request: Object});
 
         // clear all route steps
-        routeSteps.html("");
+        routeSteps.innerHTML = "";
         routeStep = 1;
+        steps = [];
 
         bounds = new google.maps.LatLngBounds();
-        fitMap();
+        // fitMap();
 
         setErrMsg();
     }
@@ -118,7 +135,7 @@ $(function() {
         return marker;
     }
 
-    function addRouteStep(time, marker) {
+    function addRouteStep(time, marker, idx) {
 
         var nextStepRow = document.createElement('li');
         nextStepRow.id = 'routeStep_' + routeStep.toString();
@@ -135,7 +152,13 @@ $(function() {
         //
         nextStepRow.appendChild(document.createTextNode(time.toString()));
         // console.log(nextStepRow);
-        document.getElementById("routeSteps").appendChild(nextStepRow);
+        // routeSteps.appendChild(nextStepRow);
+
+        if (routeSteps.children.length == 0) {
+            routeSteps.appendChild(nextStepRow);
+        } else {
+            routeSteps.insertBefore(nextStepRow, routeSteps.children[idx]);
+        }
 
         routeStep += 1;
 
@@ -143,7 +166,18 @@ $(function() {
 
     function addStepAndMarker(pos, time) {
         var marker = createMarker(pos);
-        addRouteStep(time, marker);
+
+        for (var i = 0 ; i < steps.length ; i += 1) {
+            if (new Date(time) < new Date(steps[i].date)) {
+                steps.splice(i, 0, {marker: marker, date:time});
+                break;
+            }
+        }
+        if (i === steps.length) {
+            steps.push({marker: marker, date:time});
+        }
+        
+        addRouteStep(time, marker, i);
     }
 
     function setErrMsg(msg) {

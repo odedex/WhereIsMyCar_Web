@@ -22,17 +22,27 @@ MongoClient.connect("mongodb://odedex:odedab17@ds040309.mlab.com:40309/wheremyca
     }
 });
 
-module.exports.getSingleGPSData = function (id, callback) {
+module.exports.getSingleGPSData = function (id, socket) {
     if (gpsDB) {
-        gpsDB.collection(id).find().toArray(function(err, items) {
-            return callback (err, items);
+        var stream = gpsDB.collection(id).find().stream();
+        stream.on('data', function(doc) {
+            socket.emit('newGPSEntry', doc);
+        });
+        stream.on('error', function(err) {
+            socket.emit('newGPSEntryError', err);
+        });
+        // stream.on('close', function() {
+        //     console.log('All done!');
+        // });
+        stream.on('end', function() {
+            socket.existingRequest = false;
         });
     } else {
-        return callback(DB_DOWN_ERR_MSG);
+        return failCallback(DB_DOWN_ERR_MSG);
     }
 };
 
-module.exports.getAllGPSData = function (callback) {
+module.exports.getAllGpsIDs = function (callback) {
     if (gpsDB) {
         gpsDB.listCollections().toArray(function(err, collections) {
             return callback(err, collections);
