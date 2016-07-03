@@ -67,9 +67,23 @@ module.exports.addGPSEntry = function (id, entry, callback) {
 
 module.exports.registerNewDevice = function (id, callback) {
     if (gpsDB) {
-        gpsDB.createCollection(id, function(err, collection) {
-            if (callback) {
-                return callback(err, collection);
+        queryExistingDevice(id, function(err, exists) {
+            if (err) {
+                if (callback) {
+                    return callback(err);
+                }
+            } else {
+                if (exists) {
+                    if (callback) {
+                        return callback(DIFF_NAME_ERR_MSG);
+                    }
+                } else {
+                    gpsDB.createCollection(id, function(err, collection) {
+                        if (callback) {
+                            return callback(err, collection);
+                        }
+                    });
+                }
             }
         });
     } else {
@@ -79,7 +93,7 @@ module.exports.registerNewDevice = function (id, callback) {
     }
 };
 
-module.exports.queryExistingDevice = function (id, callback) {
+function queryExistingDevice (id, callback) {
     if (gpsDB) {
         gpsDB.listCollections().toArray(function(err, collections) {
             if (err){
@@ -95,10 +109,11 @@ module.exports.queryExistingDevice = function (id, callback) {
     } else {
         return callback(DB_DOWN_ERR_MSG);
     }
-};
+}
+module.exports.queryExistingDevice = queryExistingDevice;
 
 
-/**
+    /**
  * Check if db is up and ready
  * @returns {number} 0 if not yet init, -1 if init failed, 1 if up and ready
  */
