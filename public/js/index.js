@@ -61,6 +61,7 @@ $(function() {
     });
     
     socket.on('newGPSEntry', function(entry) {
+        console.log(entry);
         var latlng = new google.maps.LatLng({lat: parseFloat(entry.lat), lng: parseFloat(entry.lng)});
         addStepAndMarker(latlng, entry.date);
     });

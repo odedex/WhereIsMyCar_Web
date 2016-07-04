@@ -35,11 +35,22 @@ module.exports = function (app, io) {
                     if (!exists) {
                         res.status(400).send(FAILED_DB_WRITE_ERR_MSG + NO_ID_ERR_MSG);
                     } else {
-                        gpsdb.addGPSEntry(id, {date:timestamp, lat: lat, lng: lng}, function(err) {
+                        var entry = {date:timestamp, lat: lat, lng: lng};
+                        gpsdb.addGPSEntry(id, entry, function(err) {
                             if (err) {
                                 res.status(500).send(FAILED_DB_OPER_ERR_MSG + err.toString());
                             } else {
                                 res.status(200).send(SUCCESS_DB_WRITE_ERR_MSG);
+
+                                // Live update sockets that listen to that same ID.
+                                for (var socketKey in io.sockets.connected) {
+                                    if (io.sockets.connected.hasOwnProperty(socketKey)) {
+                                        var socket = io.sockets.connected[socketKey];
+                                        if (socket.listeningTo === id) {
+                                            socket.emit('newGPSEntry', entry);
+                                        }
+                                    }
+                                }
                             }
                         })
                     }
@@ -104,8 +115,12 @@ module.exports = function (app, io) {
         
         socket.on('queryGPSID', function (id) {
             gpsdb.queryExistingDevice(id, function (existsErr, exists) {
+                if (!exists) {
+                    socket.listeningTo = undefined;
+                }
                 if (exists && !socket.existingRequest) {
                     socket.existingRequest = true;
+                    socket.listeningTo = id;
                     gpsdb.getSingleGPSData(id, socket);
 
 
