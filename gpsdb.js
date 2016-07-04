@@ -36,6 +36,7 @@ module.exports.getSingleGPSData = function (id, socket) {
         // });
         stream.on('end', function() {
             socket.existingRequest = false;
+            socket.emit('newGPSEntryEnd');
         });
     } else {
         return failCallback(DB_DOWN_ERR_MSG);

@@ -25,7 +25,7 @@ $(function() {
 
     sendButton.click(function() {
         if (gpsidInput.val()) {
-            // sendButton.prop("disabled", true);
+            sendButton.prop("disabled", true);
             clear();
             socket.emit("queryGPSID", gpsidInput.val());
         } else {
@@ -34,7 +34,7 @@ $(function() {
     });
 
     gpsidInput.on('keypress', function(key) {
-        if (key.keyCode === 13) {
+        if (key.keyCode === 13 && !sendButton.is(':disabled')) {
             document.getElementById("sendButton").click();
         }
     });
@@ -67,6 +67,10 @@ $(function() {
 
     socket.on('newGPSEntryError', function(err) {
         setErrMsg(err);
+    });
+
+    socket.on('newGPSEntryEnd', function() {
+        sendButton.prop("disabled", false);
     });
 
 
