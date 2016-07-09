@@ -1,6 +1,7 @@
 module.exports = function (app, io) {
 
     var gpsdb = require('./gpsdb.js');
+    var usersdb = require('./usersdb');
 
     var NO_ID_ERR_MSG = "No such ID\r\n";
     var FAILED_DB_OPER_ERR_MSG = "Database operation failed\r\n";
@@ -10,12 +11,75 @@ module.exports = function (app, io) {
     var BAD_REGISTER_FORMAT_ERR_MSG = "bad params. format is /register/:id\r\n";
     var ID_ALREADY_EXISTS_ERR_MSG = "ID is already in use\r\n";
     var ID_REGISTER_SUCCESS_MSG = "ID successfully registered\r\n";
+    var BAD_CREDS_ERR_MSG = "Wrong username or password";
+
+    var sessions = {};
+    var SESSION_TTL = 20*60*1000;
 
 
     app.get('/', function (req, res) {
-        // Render views/home.html
-        res.render('index');
+        if (sessions[req.session.token]) {
+            //todo: add check that session is up to date
+            //todo: update session time
+            res.status(303).redirect('/devices');
+        } else {
+            // Render views/home.html
+            res.status(200).render('login');
+        }
     });
+
+    app.get('/devices', function(req, res) {
+        if (sessions[req.session.token]) {
+            res.status(200).render('devices');
+        } else {
+            res.status(403).redirect('../');
+        }
+        //TODO: populate the window using sockets
+    });
+
+    
+    app.post('/loginuser', function(req, res) {
+
+        console.log("attempting login");
+        var user = req.body.user,
+            pass = req.body.pass;
+        if (isAlphanumeric(user) && isAlphanumeric(pass)) {
+            var query = {user: user, pass: pass};
+            usersdb.queryExistingUser(query, function(err, valid) {
+                if (valid === 1) {
+                    // console.log("valid");
+                    //TODO: set session
+                    var token;
+                    do {token = generateSession(user);} while (sessions[token]);
+                    sessions[token] = {time:new Date(), user:user};
+                    req.session.token = token;
+
+                    res.send({ redirect: '/devices' });
+                } else {
+                    res.send({err:BAD_CREDS_ERR_MSG});
+                }
+            })
+        }
+    });
+
+    app.post('/registeruser', function(req, res) {
+        console.log("attempting register");
+        var user = req.body.user,
+            pass = req.body.pass;
+        if (isAlphanumeric(user) && isAlphanumeric(pass)) {
+            var query = {user: user, pass: pass};
+            usersdb.registerNewUser(query, function(err) {
+                if (err) {
+                    console.error(err);
+                } else {
+                    console.log("registered new user!");
+                    //TODO: set session
+                    res.redirect('/devices');
+                }
+            })
+        }
+    });
+    
 
     /**
      * Add a new gps entry to an existing device
@@ -75,7 +139,7 @@ module.exports = function (app, io) {
                     if (exists) {
                         res.status(400).send(ID_ALREADY_EXISTS_ERR_MSG);
                     } else {
-                        gpsdb.registerNewDevice(id, function (registerErr) {
+                        gpsdb.registerNewUser(id, function (registerErr) {
                             if (registerErr) {
                                 res.status(500).send(FAILED_DB_OPER_ERR_MSG + registerErr.toString());
                             } else {
@@ -112,7 +176,7 @@ module.exports = function (app, io) {
 
         socket.existingRequest = false;
         //TODO: there may be a bug where 'existingRequest' member is ignored (replicate by spamming 'enter' on input)
-        
+
         socket.on('queryGPSID', function (id) {
             gpsdb.queryExistingDevice(id, function (existsErr, exists) {
                 if (!exists) {
@@ -136,6 +200,20 @@ module.exports = function (app, io) {
                     socket.emit('newGPSEntryError', {err: NO_ID_ERR_MSG});
                 }
             });
+        });
+
+        socket.on('doLogin', function(data) {
+            console.log(data);
         })
     })
 };
+
+function isAlphanumeric(string){
+    return (/^[a-z0-9]+$/i.test( string ));
+}
+
+function generateSession(username) {
+    var sha1 = require('sha1');
+    var date = new Date();
+    return (sha1(username + date.toString() + Math.random().toString()));
+}

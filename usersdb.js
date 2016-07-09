@@ -2,9 +2,8 @@
 
 var MongoClient = require('mongodb').MongoClient;
 
-var gpsDB;
+var usersDB;
 var ready = 0;
-var devicesCollection = "registeredDevicesInSystem";
 
 var DIFF_NAME_ERR_MSG = "Please choose a different name";
 var DB_DOWN_ERR_MSG = "Database is down";
@@ -12,20 +11,20 @@ var DB_DOWN_ERR_MSG = "Database is down";
 /**
  * Connect to the database
  */
-MongoClient.connect("mongodb://admin:adminadmin@ds040309.mlab.com:40309/wheremycar", function(err, db) {
+MongoClient.connect("mongodb://usersadmin:admin@ds040349.mlab.com:40349/wheremycarusers", function(err, db) {
     if(err) {
         ready = -1;
         console.error(err);
     } else {
-        gpsDB = db;
+        usersDB = db;
         ready = 1;
-        console.log("GPS database ready");
+        console.log("Users database ready");
     }
 });
 
 module.exports.getSingleGPSData = function (id, socket) {
-    if (gpsDB) {
-        var stream = gpsDB.collection(id).find().stream();
+    if (usersDB) {
+        var stream = usersDB.collection(id).find().stream();
         stream.on('data', function(doc) {
             socket.emit('newGPSEntry', doc);
         });
@@ -45,8 +44,8 @@ module.exports.getSingleGPSData = function (id, socket) {
 };
 
 module.exports.getAllGpsIDs = function (callback) {
-    if (gpsDB) {
-        gpsDB.listCollections().toArray(function(err, collections) {
+    if (usersDB) {
+        usersDB.listCollections().toArray(function(err, collections) {
             return callback(err, collections);
         });
     } else {
@@ -56,8 +55,8 @@ module.exports.getAllGpsIDs = function (callback) {
 
 
 module.exports.addGPSEntry = function (id, entry, callback) {
-    if (gpsDB) {
-        gpsDB.collection(id).insertOne(entry, {w:1}, function(err, result) {
+    if (usersDB) {
+        usersDB.collection(id).insertOne(entry, {w:1}, function(err, result) {
             if (callback) {
                 return callback (err, result);
             }
@@ -67,23 +66,25 @@ module.exports.addGPSEntry = function (id, entry, callback) {
     }
 };
 
-module.exports.registerNewDevice = function (id, callback) {
-    if (gpsDB) {
-        queryExistingDevice(id, function(err, exists) {
+module.exports.registerNewUser = function (query, callback) {
+    if (usersDB) {
+        queryUser(query, function(err, exists) {
             if (err) {
                 if (callback) {
                     return callback(err);
                 }
             } else {
-                if (exists) {
+                if (exists >= 0) {
                     if (callback) {
                         return callback(DIFF_NAME_ERR_MSG);
                     }
                 } else {
-                    gpsDB.createCollection(id, function(err, collection) {
-                        if (callback) {
-                            return callback(err, collection);
-                        }
+                    usersDB.createCollection(query.user, function(err, collection) {
+                        collection.insertOne({"pass":query.pass}, {w:1}, function(err, result) {
+                            if (callback) {
+                                return callback(err, collection);
+                            }
+                        })
                     });
                 }
             }
@@ -95,27 +96,45 @@ module.exports.registerNewDevice = function (id, callback) {
     }
 };
 
-function queryExistingDevice (id, callback) {
-    if (gpsDB) {
-        gpsDB.listCollections().toArray(function(err, collections) {
+/**
+ * 
+ * @param query
+ * @param callback
+ * @returns {*} 1 on user&pass match, 0 for only user match, -1 for no match
+ */
+function queryUser (query, callback) {
+    if (usersDB) {
+        usersDB.listCollections().toArray(function(err, collections) {
             if (err){
                 return callback(err);
             }
             for (var i = 0 ; i < collections.length ; i += 1) {
-                if (collections[i].name === id) {
-                    return callback(err, true);
+                if (collections[i].name === query.user) {
+                    usersDB.collection(collections[i].name).find({pass:query.pass}).toArray(function(err, items) {
+                        if (err) {
+                            return callback(err);
+                        } else {
+                            if (items.length > 0 && items[0].pass === query.pass) {
+                                return callback(err, 1);
+                            } else {
+                                return callback(err, 0);
+                            }
+                        }
+                    });
                 }
             }
-            return callback(err, false);
+            //TODO: commented out async callback that might need to still be here.
+            // console.log("callback");
+            // return callback(err, -1);
         });
     } else {
-        return callback(DB_DOWN_ERR_MSG);
+        return callback(DB_DOWN_ERR_MSG, -1);
     }
 }
-module.exports.queryExistingDevice = queryExistingDevice;
+module.exports.queryExistingUser = queryUser;
 
 
-    /**
+/**
  * Check if db is up and ready
  * @returns {number} 0 if not yet init, -1 if init failed, 1 if up and ready
  */
@@ -128,8 +147,8 @@ module.exports.isUp = function (){
  * Clear the database
  */
 module.exports.clearDB = function () {
-    if (gpsDB) {
-        gpsDB.dropDatabase();
+    if (usersDB) {
+        usersDB.dropDatabase();
         console.log("db is now clear");
     } else {
         console.log("db was not cleared");

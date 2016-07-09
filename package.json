@@ -13,9 +13,14 @@
   "author": "Oded Abramas & Nadav Rotenberg",
   "license": "HUJI",
   "dependencies": {
+    "body-parser": "^1.15.2",
+    "connect-redis": "^3.1.0",
+    "cookie-parser": "^1.4.3",
     "ejs": "^1.0.0",
     "express": "^4.8.2",
+    "express-session": "*",
     "mongodb": "2.1.19",
+    "sha1": "^1.1.1",
     "socket.io": "1.4.8"
   }
 }

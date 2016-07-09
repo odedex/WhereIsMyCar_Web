@@ -38,27 +38,6 @@ $(function() {
             document.getElementById("sendButton").click();
         }
     });
-
-    /**
-     * @deprecated use newGPSEntry
-     */
-    socket.on('queryGPSIDResponse', function(response) {
-       if (response.err) {
-           setErrMsg(response.err);
-       } else {
-           // console.log(response.data);
-           if (response.data.length > 0) {
-               clear();
-           } else {
-               setErrMsg("given ID has no results!")
-           }
-           response.data.forEach(function(loc) {
-               var latlng = new google.maps.LatLng({lat: parseFloat(loc.lat), lng: parseFloat(loc.lng)});
-               addStepAndMarker(latlng, loc.date);
-           })
-       }
-        sendButton.prop("disabled", false);
-    });
     
     socket.on('newGPSEntry', function(entry) {
         console.log(entry);

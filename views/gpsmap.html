@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link type="text/css" rel="stylesheet" href="../css/style.css" />
+    <meta charset="UTF-8">
+
+    <title>WiMC - Where is My Car?</title>
+
+    <script src="../js/jqeury-2.1.4.js"></script>
+
+    <!-- Latest compiled and minified CSS bootstrap -->
+    <link type="text/css" rel="stylesheet" href="../css/Bootstrap_3_3_6.css">
+    <!-- Latest compiled and minified JavaScript -->
+    <script type="text/javascript" src="../js/Bootstrap_3_3_6.js"></script>
+
+    <script type="text/javascript"
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBWX8KAaiCuX5vLhTcGvQrfOtQu-kbTTNw&libraries=geometry,places"></script>
+
+
+</head>
+<body>
+
+<div class="container">
+    <div id="content" class="row">
+        <div id="leftContainer" class="col-sm-3">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Input</h3>
+                </div>
+
+                <div class="panel-body ">
+                    <!--ID Input-->
+                    <div class="form-group">
+                        <label>ID:</label>
+                        <div class="input-group">
+                            <input id="gpsidInput" class="form-control" placeholder="Identifying ID" type="text">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <button id="sendButton" class="btn btn-primary col-lg-5 col-lg-offset-2 text-center" disabled>
+                            <span>Where is my car?!</span>
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="errorMsg"></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="mapAndLog" class="col-sm-6">
+            <div id="map" style="height: 530px">
+            </div>
+        </div>
+
+        <div class="col-sm-3">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Tracked Points</h3>
+                </div>
+
+                <div class="panel-body" id="route">
+                    <ul id="routeSteps" class="list-group">
+                        <!--route steps dynamically created here-->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <p class="text-muted">HUJI CLOUD - 2016</p>
+    </div>
+</footer>
+<script type="application/javascript">
+
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: {lat: 32.0808800, lng: 34.7805700},
+        zoom: 10
+    });
+
+    google.maps.event.addListenerOnce(map, 'idle', function () {
+        setTimeout(function (){document.getElementById("sendButton").disabled = false;}, 0);
+    });
+
+</script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="../js/gpsmap.js"></script>
+
+
+</body>
+</html>
