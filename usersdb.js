@@ -103,29 +103,18 @@ module.exports.registerNewUser = function (query, callback) {
  * @returns {*} 1 on user&pass match, 0 for only user match, -1 for no match
  */
 function queryUser (query, callback) {
+    var founduser = false;
     if (usersDB) {
-        usersDB.listCollections().toArray(function(err, collections) {
-            if (err){
-                return callback(err);
+        usersDB.collection(query.user).find().toArray(function(err, items) {
+            if (err || items.length === 0) {
+                return callback(null, -1);
             }
-            for (var i = 0 ; i < collections.length ; i += 1) {
-                if (collections[i].name === query.user) {
-                    usersDB.collection(collections[i].name).find({pass:query.pass}).toArray(function(err, items) {
-                        if (err) {
-                            return callback(err);
-                        } else {
-                            if (items.length > 0 && items[0].pass === query.pass) {
-                                return callback(err, 1);
-                            } else {
-                                return callback(err, 0);
-                            }
-                        }
-                    });
-                }
+            if (items[0].pass === query.pass) {
+                founduser = true;
+                return callback(null, 1);
+            } else {
+                return callback(null, 0);
             }
-            //TODO: commented out async callback that might need to still be here.
-            // console.log("callback");
-            // return callback(err, -1);
         });
     } else {
         return callback(DB_DOWN_ERR_MSG, -1);

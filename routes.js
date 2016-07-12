@@ -19,9 +19,15 @@ module.exports = function (app, io) {
 
     app.get('/', function (req, res) {
         if (sessions[req.session.token]) {
-            //todo: add check that session is up to date
-            //todo: update session time
-            res.status(303).redirect('/devices');
+            var token = req.session.token;
+            var session = sessions[token];
+            if (new Date() - session.time < SESSION_TTL) {
+                sessions[token] = {time: new Date(), user: session.user};
+                res.status(303).redirect('/devices');
+            } else {
+                delete sessions[token];
+                res.status(200).render('login');
+            }
         } else {
             // Render views/home.html
             res.status(200).render('login');
@@ -54,11 +60,14 @@ module.exports = function (app, io) {
                     sessions[token] = {time:new Date(), user:user};
                     req.session.token = token;
 
-                    res.send({ redirect: '/devices' });
+                    res.send({redirect: '/devices'});
                 } else {
-                    res.send({err:BAD_CREDS_ERR_MSG});
+                    res.send({setErrMsg: BAD_CREDS_ERR_MSG});
                 }
             })
+        } else {
+            console.log("not alpha numeric!");
+            res.send({setErrMsg: "Please use only numbers and characters."});
         }
     });
 
@@ -70,13 +79,30 @@ module.exports = function (app, io) {
             var query = {user: user, pass: pass};
             usersdb.registerNewUser(query, function(err) {
                 if (err) {
-                    console.error(err);
+                    res.send({setErrMsg: err.toString()});
                 } else {
                     console.log("registered new user!");
+
+                    var token;
+                    do {token = generateSession(user);} while (sessions[token]);
+                    sessions[token] = {time:new Date(), user:user};
+                    req.session.token = token;
+
+                    res.send({redirect: '/devices'});
                     //TODO: set session
-                    res.redirect('/devices');
                 }
             })
+        }
+    });
+
+    app.post('/logoutuser', function(req, res) {
+        var token = req.session.token;
+        if (token && sessions[token]) {
+            delete sessions[token];
+            delete req.session.token;
+            res.status(200).send({redirect:'/'});
+        } else {
+            res.status(403).send({redirect:'/'});
         }
     });
     

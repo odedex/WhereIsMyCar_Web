@@ -18,20 +18,27 @@ $(function() {
             $.post('/loginuser', query, function (res, status, jqxhr) {
                 if (res.redirect) {
                     document.location.href = res.redirect;
+                } else {
+                    setLoginMsg(res.setErrMsg);
                 }
             });
-            // socket.emit("doLogin", {user:loginIdInput.val(), pass:SHA256(loginPassInput.val())})
         } else {
-            // setLoginMsg("Not alpha numeric!"); //TODO: use this or not?
+            setLoginMsg("Please use only numbers and characters.");
         }
     });
 
     registerSend.click(function() {
         if (isAlphanumeric(registerIdInput.val()) && isAlphanumeric(registerPassInput.val())) {
             var query = {user:registerIdInput.val(), pass:SHA256(registerPassInput.val())};
-            $.post('/registeruser', query);
+            $.post('/registeruser', query, function(res, staus, jqxhr) {
+                if (res.redirect) {
+                    document.location.href = res.redirect;
+                } else {
+                    setRegisterMsg(res.setErrMsg);
+                }
+            });
         } else {
-            // registerErrMsg("Not alpha numeric!"); //TODO: use this or not?
+            registerErrMsg("Please use only numbers and characters.");
         }
     });
 
