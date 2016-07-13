@@ -163,6 +163,7 @@ module.exports = function (app, io) {
                                     if (io.sockets.connected.hasOwnProperty(socketKey)) {
                                         var socket = io.sockets.connected[socketKey];
                                         if (socket.listeningTo === id) {
+                                            //todo: listeningTo may be able to be changed in the new structure.
                                             socket.emit('newGPSEntry', entry);
                                         }
                                     }
@@ -224,12 +225,13 @@ module.exports = function (app, io) {
         return dd;
     }
 
-    var gpsio = io.on('connection', function(socket) {
+    io.on('connection', function(socket) {
 
         socket.existingRequest = false;
         //TODO: there may be a bug where 'existingRequest' member is ignored (replicate by spamming 'enter' on input)
 
         socket.on('queryGPSID', function (id) {
+            //TODO: this function may be changed due to new structure
             gpsdb.queryExistingDevice(id, function (existsErr, exists) {
                 if (!exists) {
                     socket.listeningTo = undefined;
