@@ -21,6 +21,7 @@
     "express-session": "*",
     "mongodb": "2.1.19",
     "sha1": "^1.1.1",
-    "socket.io": "1.4.8"
+    "socket.io": "1.4.8",
+    "express-socket.io-session": "*"
   }
 }

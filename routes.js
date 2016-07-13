@@ -16,31 +16,43 @@ module.exports = function (app, io) {
     var sessions = {};
     var SESSION_TTL = 20*60*1000;
 
-
-    app.get('/', function (req, res) {
-        if (sessions[req.session.token]) {
-            var token = req.session.token;
+    function validateSession(token) {
+        if (token) {
             var session = sessions[token];
             if (new Date() - session.time < SESSION_TTL) {
                 sessions[token] = {time: new Date(), user: session.user};
-                res.status(303).redirect('/devices');
+                return true;
             } else {
                 delete sessions[token];
-                res.status(200).render('login');
+                return false;
             }
         } else {
-            // Render views/home.html
+            return false;
+        }
+    }
+
+    app.get('/', function (req, res) {
+        if (validateSession(req.session.token)) {
+            res.status(303).redirect('/devices');
+        } else {
             res.status(200).render('login');
         }
     });
 
     app.get('/devices', function(req, res) {
-        if (sessions[req.session.token]) {
+        if (validateSession(req.session.token)) {
             res.status(200).render('devices');
         } else {
             res.status(403).redirect('../');
         }
-        //TODO: populate the window using sockets
+    });
+
+    app.get('/gpsmap', function(req, res) {
+        if (validateSession(req.session.token)) {
+            res.status(200).render('gpsmap');
+        } else {
+            res.status(403).redirect('../');
+        }
     });
 
     
@@ -101,6 +113,20 @@ module.exports = function (app, io) {
             delete sessions[token];
             delete req.session.token;
             res.status(200).send({redirect:'/'});
+        } else {
+            res.status(403).send({redirect:'/'});
+        }
+    });
+
+    app.post('/listendevice', function(req, res) {
+        if (validateSession(req.session.token)) {
+            var device = req.body.device;
+            if (device) {
+                req.session.device = device;
+                res.status(200).send({redirect:'/gpsmap'});
+            } else {
+                res.status(400).send({redirect:'/devices'});
+            }
         } else {
             res.status(403).send({redirect:'/'});
         }
@@ -230,7 +256,15 @@ module.exports = function (app, io) {
 
         socket.on('doLogin', function(data) {
             console.log(data);
-        })
+        });
+
+        socket.on('populateDevicesRequest', function() {
+            // console.log(socket.handshake.session.token);
+            var token = socket.handshake.session.token;
+            usersdb.getUserDevices(sessions[token].user, socket);
+            //TODO: populate rooms tied to the user according to the token
+        });
+
     })
 };
 

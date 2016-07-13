@@ -22,21 +22,13 @@ MongoClient.connect("mongodb://usersadmin:admin@ds040349.mlab.com:40349/wheremyc
     }
 });
 
-module.exports.getSingleGPSData = function (id, socket) {
+module.exports.getUserDevices = function (id, socket) {
     if (usersDB) {
-        var stream = usersDB.collection(id).find().stream();
-        stream.on('data', function(doc) {
-            socket.emit('newGPSEntry', doc);
-        });
-        stream.on('error', function(err) {
-            socket.emit('newGPSEntryError', err);
-        });
-        // stream.on('close', function() {
-        //     console.log('All done!');
-        // });
-        stream.on('end', function() {
-            socket.existingRequest = false;
-            socket.emit('newGPSEntryEnd');
+        usersDB.collection(id).find().toArray(function (err, items) {
+            var deviceArray = items[0].devices;
+            deviceArray.forEach(function(deviceID) {
+                socket.emit('populateDevice', deviceID);
+            });
         });
     } else {
         return failCallback(DB_DOWN_ERR_MSG);

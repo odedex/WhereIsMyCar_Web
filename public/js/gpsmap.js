@@ -1,4 +1,6 @@
 $(function() {
+
+    //todo update this entire javascript file.
     var socket = io();
 
     // ui elements
@@ -191,4 +193,5 @@ $(function() {
     //     })
     // });
 
+    socket.emit("test");
 });
