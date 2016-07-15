@@ -41,6 +41,9 @@ module.exports = function (app, io) {
 
     app.get('/devices', function(req, res) {
         if (validateSession(req.session.token)) {
+            if (req.session.device) {
+                delete req.session.device;
+            }
             res.status(200).render('devices');
         } else {
             res.status(403).redirect('../');
@@ -162,7 +165,7 @@ module.exports = function (app, io) {
                                 for (var socketKey in io.sockets.connected) {
                                     if (io.sockets.connected.hasOwnProperty(socketKey)) {
                                         var socket = io.sockets.connected[socketKey];
-                                        if (socket.listeningTo === id) {
+                                        if (socket.handshake.session.device === id) {
                                             //todo: listeningTo may be able to be changed in the new structure.
                                             socket.emit('newGPSEntry', entry);
                                         }
@@ -228,17 +231,12 @@ module.exports = function (app, io) {
     io.on('connection', function(socket) {
 
         socket.existingRequest = false;
-        //TODO: there may be a bug where 'existingRequest' member is ignored (replicate by spamming 'enter' on input)
-
-        socket.on('queryGPSID', function (id) {
+        socket.on('queryGPSID', function () {
+            var id = socket.handshake.session.device;
             //TODO: this function may be changed due to new structure
             gpsdb.queryExistingDevice(id, function (existsErr, exists) {
-                if (!exists) {
-                    socket.listeningTo = undefined;
-                }
                 if (exists && !socket.existingRequest) {
                     socket.existingRequest = true;
-                    socket.listeningTo = id;
                     gpsdb.getSingleGPSData(id, socket);
 
 

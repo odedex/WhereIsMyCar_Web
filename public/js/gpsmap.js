@@ -3,13 +3,13 @@ $(function() {
     //todo update this entire javascript file.
     var socket = io();
 
-    // ui elements
-    var sendButton = $("#sendButton");
-    var gpsidInput = $("#gpsidInput");
-    // var routeSteps = $("#routeSteps");
-    var errorMsg = $("#errorMsg");
+    var chooseDevice = $("#chooseDevice");
+    var logOut = $("#logOut");
 
-    var routeSteps = document.getElementById("routeSteps");
+    // ui elements
+    var routeSteps = $("#routeSteps");
+
+    // var routeSteps = document.getElementById("routeSteps");
     var steps = [];
 
     // map related variables
@@ -24,25 +24,19 @@ $(function() {
     directionsDisplay.setMap(map);
     directionsDisplay.setOptions({suppressMarkers: true});
 
-
-    sendButton.click(function() {
-        if (gpsidInput.val()) {
-            sendButton.prop("disabled", true);
-            clear();
-            socket.emit("queryGPSID", gpsidInput.val());
-        } else {
-            setErrMsg("please enter an id!");
-        }
+    chooseDevice.click(function() {
+        window.location.href = "/devices";
     });
 
-    gpsidInput.on('keypress', function(key) {
-        if (key.keyCode === 13 && !sendButton.is(':disabled')) {
-            document.getElementById("sendButton").click();
-        }
+    logOut.click(function() {
+        $.post('/logoutuser', null, function (res, status, jqxhr) {
+            document.location.href = res.redirect;
+        });
     });
-    
+
+    socket.emit('queryGPSID');
+
     socket.on('newGPSEntry', function(entry) {
-        console.log(entry);
         var latlng = new google.maps.LatLng({lat: parseFloat(entry.lat), lng: parseFloat(entry.lng)});
         addStepAndMarker(latlng, entry.date);
     });
@@ -50,31 +44,6 @@ $(function() {
     socket.on('newGPSEntryError', function(err) {
         setErrMsg(err);
     });
-
-    socket.on('newGPSEntryEnd', function() {
-        sendButton.prop("disabled", false);
-    });
-
-
-    function clear() {
-        markers.forEach(function (marker) {
-            marker.setMap(null);
-        });
-        markers = [];
-
-        // delete route from map.
-        directionsDisplay.setDirections({geocoded_waypoints: [], routes: [], status: 'OK', request: Object});
-
-        // clear all route steps
-        routeSteps.innerHTML = "";
-        routeStep = 1;
-        steps = [];
-
-        bounds = new google.maps.LatLngBounds();
-        // fitMap();
-
-        setErrMsg();
-    }
 
     function fitMap() {
         for (var i = 0; i < markers.length; i++) {
@@ -122,32 +91,27 @@ $(function() {
     }
 
     function addRouteStep(time, marker, idx) {
+        var li = $('<li></li>');
+        li.attr('id', 'routeStep_' + routeStep.toString());
+        li.data('mapMarker', marker); //TODO: DEBUG THIS
+        li.addClass('list-group-item routestep');
+        li.mouseover(function() {
+            jQuery(this).css('background-color', '#e6e6e6');
+            jQuery(this).data('mapMarker').markerInfoWindow();
+        });
+        li.mouseout(function() {
+            jQuery(this).css('background-color', 'white');
+            jQuery(this).data('mapMarker').markerInfoWindowClose();
+        });
 
-        var nextStepRow = document.createElement('li');
-        nextStepRow.id = 'routeStep_' + routeStep.toString();
-        nextStepRow.className = 'list-group-item routstep';
-        nextStepRow.mapMarker = marker;
-        nextStepRow.onmouseover = function () {
-            this.style.backgroundColor = "#e6e6e6";
-            this.mapMarker.markerInfoWindow();
-        };
-        nextStepRow.onmouseout = function () {
-            this.style.backgroundColor = "white";
-            this.mapMarker.markerInfoWindowClose();
-        };
-        //
-        nextStepRow.appendChild(document.createTextNode(time.toString()));
-        // console.log(nextStepRow);
-        // routeSteps.appendChild(nextStepRow);
+        li.append(document.createTextNode(time.toString()));
 
-        if (routeSteps.children.length == 0) {
-            routeSteps.appendChild(nextStepRow);
+        if(idx === 0) {
+            routeSteps.prepend(li);
         } else {
-            routeSteps.insertBefore(nextStepRow, routeSteps.children[idx]);
+            $("#routeSteps > li:nth-child(" + (idx) + ")").after(li);
         }
-
         routeStep += 1;
-
     }
 
     function addStepAndMarker(pos, time) {
@@ -172,26 +136,5 @@ $(function() {
         } else {
             errorMsg.html("")
         }
-
     }
-    
-    
-
-    // socket.emit('populateRoomsRequest');
-    //
-    // socket.on('populateRoomsResponse', function (roomIds) {
-    //     roomIds.forEach(function(room) {
-    //         var li = $(
-    //
-    //             '<a title="Join" href="game/'+ room.gameID.toString() +'">' +
-    //             '<div class="openroom">' +
-    //             '<div gameID="big">' + room.gameID.toString() + '</div>' +
-    //             '<div gameID="small">Users: ' + room.count.toString() + '</div>' +
-    //             '</a>'
-    //         );
-    //         sendButton.append(li);
-    //     })
-    // });
-
-    socket.emit("test");
 });

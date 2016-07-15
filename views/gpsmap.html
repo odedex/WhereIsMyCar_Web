@@ -25,27 +25,16 @@
     <div id="content" class="row">
         <div id="leftContainer" class="col-sm-3">
             <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Input</h3>
-                </div>
-                <!--<TODO> change input to have list of devices</TODO>-->
                 <div class="panel-body ">
-                    <!--ID Input-->
                     <div class="form-group">
-                        <label>ID:</label>
-                        <div class="input-group">
-                            <input id="gpsidInput" class="form-control" placeholder="Identifying ID" type="text">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <button id="sendButton" class="btn btn-primary col-lg-5 col-lg-offset-2 text-center" disabled>
-                            <span>Where is my car?!</span>
+                        <br>
+                        <button id="chooseDevice" class="btn btn-info center-block">
+                            <span>Back to devices</span>
                         </button>
-                    </div>
-
-                    <div class="form-group">
-                        <label id="errorMsg"></label>
+                        <br>
+                        <button id="logOut" class="btn btn-danger center-block">
+                            <span>Logout</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -84,9 +73,9 @@
         zoom: 10
     });
 
-    google.maps.event.addListenerOnce(map, 'idle', function () {
-        setTimeout(function (){document.getElementById("sendButton").disabled = false;}, 0);
-    });
+//    google.maps.event.addListenerOnce(map, 'idle', function () {
+//        setTimeout(function (){document.getElementById("sendButton").disabled = false;}, 0);
+//    });
 
 </script>
 <script src="/socket.io/socket.io.js"></script>
