@@ -51,7 +51,7 @@ module.exports = function (app, io) {
     });
 
     app.get('/gpsmap', function(req, res) {
-        if (validateSession(req.session.token)) {
+        if (validateSession(req.session.token) && req.session.device) {
             res.status(200).render('gpsmap');
         } else {
             res.status(403).redirect('../');
@@ -233,7 +233,6 @@ module.exports = function (app, io) {
         socket.existingRequest = false;
         socket.on('queryGPSID', function () {
             var id = socket.handshake.session.device;
-            //TODO: this function may be changed due to new structure
             gpsdb.queryExistingDevice(id, function (existsErr, exists) {
                 if (exists && !socket.existingRequest) {
                     socket.existingRequest = true;
@@ -252,10 +251,6 @@ module.exports = function (app, io) {
                     socket.emit('newGPSEntryError', {err: NO_ID_ERR_MSG});
                 }
             });
-        });
-
-        socket.on('doLogin', function(data) {
-            console.log(data);
         });
 
         socket.on('populateDevicesRequest', function() {
