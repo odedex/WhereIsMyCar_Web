@@ -26,9 +26,11 @@ module.exports.getUserDevices = function (id, socket) {
     if (usersDB) {
         usersDB.collection(id).find().toArray(function (err, items) {
             var deviceArray = items[0].devices;
-            deviceArray.forEach(function(deviceID) {
-                socket.emit('populateDevice', deviceID);
-            });
+            if (deviceArray) {
+                deviceArray.forEach(function(deviceID) {
+                    socket.emit('populateDevice', deviceID.name);
+                });
+            }
         });
     } else {
         return failCallback(DB_DOWN_ERR_MSG);
@@ -39,19 +41,6 @@ module.exports.getAllGpsIDs = function (callback) {
     if (usersDB) {
         usersDB.listCollections().toArray(function(err, collections) {
             return callback(err, collections);
-        });
-    } else {
-        return callback(DB_DOWN_ERR_MSG);
-    }
-};
-
-
-module.exports.addGPSEntry = function (id, entry, callback) {
-    if (usersDB) {
-        usersDB.collection(id).insertOne(entry, {w:1}, function(err, result) {
-            if (callback) {
-                return callback (err, result);
-            }
         });
     } else {
         return callback(DB_DOWN_ERR_MSG);
@@ -88,6 +77,31 @@ module.exports.registerNewUser = function (query, callback) {
     }
 };
 
+module.exports.addDeviceToUser = function (user, device, callback) {
+    if (usersDB) {
+        queryUser({user: user}, function(err, exists) {
+            if (err) {
+                if (callback) {
+                    return callback(err);
+                }
+            } else if (exists === 0 ) {
+                // var deviceobj = {"name":device.name.toString(), "id":device.id.toString()};
+                //TODO: THE SERVER ALSO NEEDS TO ADD THE DEVICE TO THE DEVICES DB
+                usersDB.collection(user).updateOne({}, {"$push":{"devices":device}}, {w:1}, function(err, res) {
+                    console.log("add successful!");
+                });
+            } else {
+                console.log("no such user");
+                //todo update error handling
+            }
+        })
+    } else {
+        if (callback) {
+            return callback(DB_DOWN_ERR_MSG);
+        }
+    }
+};
+
 /**
  * 
  * @param query
@@ -95,17 +109,15 @@ module.exports.registerNewUser = function (query, callback) {
  * @returns {*} 1 on user&pass match, 0 for only user match, -1 for no match
  */
 function queryUser (query, callback) {
-    var founduser = false;
     if (usersDB) {
         usersDB.collection(query.user).find().toArray(function(err, items) {
             if (err || items.length === 0) {
-                return callback(null, -1);
+                return callback(null, -1); // no username or password
             }
             if (items[0].pass === query.pass) {
-                founduser = true;
-                return callback(null, 1);
+                return callback(null, 1); // username match and password match
             } else {
-                return callback(null, 0);
+                return callback(null, 0); // username match but no password match
             }
         });
     } else {

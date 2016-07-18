@@ -1,13 +1,41 @@
 $(function() {
     var socket = io();
 
+    var deviceNameInput = $("#deviceNameInput");
     var deviceIDInput = $("#deviceIDInput");
+
     var deviceRegisterSend = $("#deviceRegisterSend");
     var deviceRegisterErrMsg = $("#deviceRegisterErrMsg");
 
-    var logOut = $("#logOut"); //TODO: add logout support
+    var logOut = $("#logOut");
 
     var devicesList = $("#devicesList");
+
+    deviceRegisterSend.click(function () {
+        if (isAlphanumeric(deviceNameInput.val()) && isAlphanumeric(deviceIDInput.val())) {
+            //TODO: do we need to check if device id is alpha numeric?
+            var query = {name: deviceNameInput.val(), id:SHA256(deviceIDInput.val())};
+            $.post('/registrdevicetouser', query, function(res, status, jqxhr) {
+                console.log("register device to user response");
+            })
+        }
+    });
+
+    // loginSend.click(function() {
+    //     if (isAlphanumeric(loginIdInput.val()) && isAlphanumeric(loginPassInput.val())) {
+    //         var query = {user:loginIdInput.val(), pass:SHA256(loginPassInput.val())};
+    //         $.post('/loginuser', query, function (res, status, jqxhr) {
+    //             if (res.redirect) {
+    //                 document.location.href = res.redirect;
+    //             } else {
+    //                 setLoginMsg(res.setErrMsg);
+    //             }
+    //         });
+    //     } else {
+    //         setLoginMsg("Please use only numbers and characters.");
+    //     }
+    // });
+
 
     logOut.click(function() {
         $.post('/logoutuser', null, function (res, status, jqxhr) {
@@ -35,5 +63,17 @@ $(function() {
             })
         });
         devicesList.append(li);
-    })
+    });
+
+    function setRegisterDeviceMsg(msg) {
+        if (msg) {
+            deviceRegisterErrMsg.html(msg);
+        } else {
+            deviceRegisterErrMsg.html("")
+        }
+    }
+
+    function isAlphanumeric(string){
+        return (/^[a-z0-9]+$/i.test( string ));
+    }
 });

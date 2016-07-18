@@ -134,6 +134,48 @@ module.exports = function (app, io) {
             res.status(403).send({redirect:'/'});
         }
     });
+
+    app.post('/registrdevicetouser', function(req, res) {
+        console.log("attempting device register");
+        if (validateSession(req.session.token)) {
+            var name = req.body.name,
+                id = req.body.id;
+            if (isAlphanumeric(name) && isAlphanumeric(id)) {
+                var token = req.session.token;
+                var user = sessions[token].user;
+                var device = {name:name, id:id};
+                usersdb.addDeviceToUser(user, device, function(err, res) {
+                    if (err) {
+                        console.log("server encountered error upon trying to add device to user");
+                        //todo: add proper callback and also update the device list
+                    } else {
+                        console.log("server added device to user!")
+                        //todo: add proper callback and also update the device list
+                    }
+                });
+                //TODO: finish this!
+            }
+            // if (isAlphanumeric(user) && isAlphanumeric(pass)) {
+            //     var query = {user: user, pass: pass};
+            //     usersdb.registerNewUser(query, function(err) {
+            //         if (err) {
+            //             res.send({setErrMsg: err.toString()});
+            //         } else {
+            //             console.log("registered new user!");
+            //
+            //             var token;
+            //             do {token = generateSession(user);} while (sessions[token]);
+            //             sessions[token] = {time:new Date(), user:user};
+            //             req.session.token = token;
+            //
+            //             res.send({redirect: '/devices'});
+            //         }
+            //     })
+            // }
+        } else {
+            res.status(403).send({redirect:'/'});
+        }
+    });
     
 
     /**
@@ -181,10 +223,14 @@ module.exports = function (app, io) {
         }
     });
 
+
+
+
     /**
      * Register a new device to the database
      */
     //TODO: future work - implement functionality that avoids fake devices
+    //TODO: MIGHT BE REDUNDANT
     app.get('/register/:id', function (req, res) {
         var id = req.params.id;
         if (id) {
