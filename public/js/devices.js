@@ -14,9 +14,11 @@ $(function() {
     deviceRegisterSend.click(function () {
         if (isAlphanumeric(deviceNameInput.val()) && isAlphanumeric(deviceIDInput.val())) {
             //TODO: do we need to check if device id is alpha numeric?
-            var query = {name: deviceNameInput.val(), id:SHA256(deviceIDInput.val())};
+            var query = {name: deviceNameInput.val(), id:deviceIDInput.val()};
             $.post('/registrdevicetouser', query, function(res, status, jqxhr) {
-                console.log("register device to user response");
+                if (res.setErrMsg) {
+                    setRegisterDeviceMsg(res.setErrMsg);
+                }
             })
         }
     });
@@ -63,6 +65,10 @@ $(function() {
             })
         });
         devicesList.append(li);
+    });
+
+    socket.on('setMsg', function(msg) {
+        setRegisterDeviceMsg(msg);
     });
 
     function setRegisterDeviceMsg(msg) {

@@ -9,6 +9,7 @@ $(function() {
     // ui elements
     var route = $("#route");
     var routeSteps = $("#routeSteps");
+    var deviceName = $("#deviceName");
 
     // var routeSteps = document.getElementById("routeSteps");
     var steps = [];
@@ -35,7 +36,11 @@ $(function() {
         });
     });
 
-    socket.emit('queryGPSID');
+    socket.emit('queryGPSName');
+
+    socket.on('deviceName', function(name) {
+        deviceName.html(name);
+    });
 
     socket.on('newGPSEntry', function(entry) {
         var latlng = new google.maps.LatLng({lat: parseFloat(entry.lat), lng: parseFloat(entry.lng)});
@@ -94,7 +99,7 @@ $(function() {
     function addRouteStep(time, marker, idx) {
         var li = $('<li></li>');
         li.attr('id', 'routeStep_' + routeStep.toString());
-        li.data('mapMarker', marker); //TODO: DEBUG THIS
+        li.data('mapMarker', marker);
         li.addClass('list-group-item routestep');
         li.mouseover(function() {
             jQuery(this).css('background-color', '#e6e6e6');

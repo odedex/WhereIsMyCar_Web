@@ -22,18 +22,14 @@ MongoClient.connect("mongodb://usersadmin:admin@ds040349.mlab.com:40349/wheremyc
     }
 });
 
-module.exports.getUserDevices = function (id, socket) {
+module.exports.getUserDevices = function (id, callback) {
     if (usersDB) {
         usersDB.collection(id).find().toArray(function (err, items) {
-            var deviceArray = items[0].devices;
-            if (deviceArray) {
-                deviceArray.forEach(function(deviceID) {
-                    socket.emit('populateDevice', deviceID.name);
-                });
-            }
+            return callback(items[0].devices);
         });
     } else {
-        return failCallback(DB_DOWN_ERR_MSG);
+        return callback(null);
+        // return callback(DB_DOWN_ERR_MSG);
     }
 };
 
@@ -84,21 +80,46 @@ module.exports.addDeviceToUser = function (user, device, callback) {
                 if (callback) {
                     return callback(err);
                 }
-            } else if (exists === 0 ) {
+            } else if (exists >= 0 ) {
                 // var deviceobj = {"name":device.name.toString(), "id":device.id.toString()};
                 //TODO: THE SERVER ALSO NEEDS TO ADD THE DEVICE TO THE DEVICES DB
                 usersDB.collection(user).updateOne({}, {"$push":{"devices":device}}, {w:1}, function(err, res) {
-                    console.log("add successful!");
+                    if (callback) {
+                        return callback(err, res);
+                    }
                 });
             } else {
-                console.log("no such user");
-                //todo update error handling
+                if (callback) {
+                    return callback("No such user found");
+                }
             }
         })
     } else {
         if (callback) {
             return callback(DB_DOWN_ERR_MSG);
         }
+    }
+};
+
+module.exports.deviceNameToID = function(username, deviceName, callback) {
+    if (usersDB) {
+        usersDB.collection(username).find().toArray(function (err, items) {
+            if (err) {
+                return callback(err);
+            } else {
+                var deviceArray = items[0].devices;
+                if (deviceArray) {
+                    for (var i = 0 ; i <deviceArray.length ; i += 1) {
+                        if (deviceArray[i].name === deviceName) {
+                            return callback (err, deviceArray[i].id);
+                        }
+                    }
+                }
+                return callback("No such name");
+            }
+        });
+    } else {
+        return callback(DB_DOWN_ERR_MSG);
     }
 };
 
