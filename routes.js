@@ -267,8 +267,8 @@ function isAlphanumeric(string){
     return (/^[a-z0-9]+$/i.test( string ));
 }
 
+var sha256 = require('sha256');
 function generateSession(username) {
-    var sha1 = require('sha1');
     var date = new Date();
-    return (sha1(username + date.toString() + Math.random().toString()));
+    return (sha256(username + date.toString() + Math.random().toString()));
 }

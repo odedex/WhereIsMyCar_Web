@@ -7,6 +7,7 @@ $(function() {
     var logOut = $("#logOut");
 
     // ui elements
+    var route = $("#route");
     var routeSteps = $("#routeSteps");
 
     // var routeSteps = document.getElementById("routeSteps");
@@ -112,6 +113,8 @@ $(function() {
             $("#routeSteps > li:nth-child(" + (idx) + ")").after(li);
         }
         routeStep += 1;
+
+        route.scrollTop(route.prop('scrollHeight'));
     }
 
     function addStepAndMarker(pos, time) {
