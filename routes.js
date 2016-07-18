@@ -14,6 +14,7 @@ module.exports = function (app, io) {
     var BAD_CREDS_ERR_MSG = "Wrong username or password\r\n";
     var ID_NOT_YET_PENDING_MSG = "No such id is pending registration\r\n";
     var DEVICE_PENDING_MSG = "Device pending confirmation\r\n";
+    var DEVICE_NAME_TAKEN_MSG = "Device name already in use\r\n";
 
     var waitingDevices = {}; // deviceID -> requesting_user, name
     var sessions = {}; // token -> username, time
@@ -74,13 +75,13 @@ module.exports = function (app, io) {
                     sessions[token] = {time:new Date(), user:user};
                     req.session.token = token;
 
-                    res.send({redirect: '/devices'});
+                    res.status(200).send({redirect: '/devices'});
                 } else {
-                    res.send({setErrMsg: BAD_CREDS_ERR_MSG});
+                    res.status(200).send({setErrMsg: BAD_CREDS_ERR_MSG});
                 }
             })
         } else {
-            res.send({setErrMsg: "Please use only numbers and characters."});
+            res.status(200).send({setErrMsg: "Please use only numbers and characters."});
         }
     });
 
@@ -91,14 +92,14 @@ module.exports = function (app, io) {
             var query = {user: user, pass: pass};
             usersdb.registerNewUser(query, function(err) {
                 if (err) {
-                    res.send({setErrMsg: err.toString()});
+                    res.status(200).send({setErrMsg: err.toString()});
                 } else {
                     var token;
                     do {token = generateSession(user);} while (sessions[token]);
                     sessions[token] = {time:new Date(), user:user};
                     req.session.token = token;
 
-                    res.send({redirect: '/devices'});
+                    res.status(303).send({redirect: '/devices'});
                     //TODO: set session
                 }
             })
@@ -123,7 +124,7 @@ module.exports = function (app, io) {
                 req.session.device = device;
                 res.status(200).send({redirect:'/gpsmap'});
             } else {
-                res.status(400).send({redirect:'/devices'});
+                res.status(403).send({redirect:'/devices'});
             }
         } else {
             res.status(403).send({redirect:'/'});
@@ -138,9 +139,20 @@ module.exports = function (app, io) {
             if (isAlphanumeric(name) && isAlphanumeric(id)) {
                 var token = req.session.token;
                 var user = sessions[token].user;
-                waitingDevices[id] = {user:user, name:name};
-                // console.log(waitingDevices);
-                res.status(200).send({setErrMsg: DEVICE_PENDING_MSG});
+
+                usersdb.isNameTaken(user, name, function(err, isTaken) {
+                    if (err) {
+                        res.status(200).send({setErrMsg: err.toString()});
+                    } else {
+                        if (isTaken) {
+                            res.status(200).send({setErrMsg: DEVICE_NAME_TAKEN_MSG});
+                        } else {
+                            waitingDevices[id] = {user:user, name:name};
+                            // console.log(waitingDevices);
+                            res.status(200).send({setErrMsg: DEVICE_PENDING_MSG});
+                        }
+                    }
+                });
             }
         } else {
             res.status(403).send({redirect:'/'});

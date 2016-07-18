@@ -17,32 +17,33 @@ $(function() {
             var query = {name: deviceNameInput.val(), id:deviceIDInput.val()};
             $.post('/registrdevicetouser', query, function(res, status, jqxhr) {
                 if (res.setErrMsg) {
+                    console.log("got error msg");
                     setRegisterDeviceMsg(res.setErrMsg);
+                } else {
+
+                    console.log("no error msg");
                 }
             })
         }
     });
-
-    // loginSend.click(function() {
-    //     if (isAlphanumeric(loginIdInput.val()) && isAlphanumeric(loginPassInput.val())) {
-    //         var query = {user:loginIdInput.val(), pass:SHA256(loginPassInput.val())};
-    //         $.post('/loginuser', query, function (res, status, jqxhr) {
-    //             if (res.redirect) {
-    //                 document.location.href = res.redirect;
-    //             } else {
-    //                 setLoginMsg(res.setErrMsg);
-    //             }
-    //         });
-    //     } else {
-    //         setLoginMsg("Please use only numbers and characters.");
-    //     }
-    // });
 
 
     logOut.click(function() {
         $.post('/logoutuser', null, function (res, status, jqxhr) {
             document.location.href = res.redirect;
         });
+    });
+
+    deviceNameInput.on('keypress', function(key) {
+        if (key.keyCode === 13 && !deviceRegisterSend.is(':disabled')) {
+            deviceRegisterSend.click();
+        }
+    });
+
+    deviceIDInput.on('keypress', function(key) {
+        if (key.keyCode === 13 && !deviceRegisterSend.is(':disabled')) {
+            deviceRegisterSend.click();
+        }
     });
 
     socket.emit('populateDevicesRequest');

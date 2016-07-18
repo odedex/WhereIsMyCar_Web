@@ -103,19 +103,33 @@ module.exports.addDeviceToUser = function (user, device, callback) {
 
 module.exports.deviceNameToID = function(username, deviceName, callback) {
     if (usersDB) {
-        usersDB.collection(username).find().toArray(function (err, items) {
+        usersDB.collection(username).find({"devices.name" : deviceName}, {"devices.$": 1}).toArray(function (err, items) {
             if (err) {
                 return callback(err);
             } else {
-                var deviceArray = items[0].devices;
-                if (deviceArray) {
-                    for (var i = 0 ; i <deviceArray.length ; i += 1) {
-                        if (deviceArray[i].name === deviceName) {
-                            return callback (err, deviceArray[i].id);
-                        }
-                    }
+                if (items.length > 0) {
+                    return callback (err, items[0].devices[0].id);
+                } else {
+                    return callback("No such name");
                 }
-                return callback("No such name");
+            }
+        });
+    } else {
+        return callback(DB_DOWN_ERR_MSG);
+    }
+};
+
+module.exports.isNameTaken = function(username, deviceName, callback) {
+    if (usersDB) {
+        usersDB.collection(username).find({"devices.name" : deviceName}, {"devices.$": 1}).toArray(function (err, items) {
+            if (err) {
+                return callback(err);
+            } else {
+                if (items.length > 0) {
+                    return callback (err, true);
+                } else {
+                    return callback(err, false);
+                }
             }
         });
     } else {

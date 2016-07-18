@@ -44,25 +44,25 @@ $(function() {
 
     loginIdInput.on('keypress', function(key) {
         if (key.keyCode === 13 && !loginSend.is(':disabled')) {
-            document.getElementById("loginSend").click();
+            loginSend.click();
         }
     });
 
     loginPassInput.on('keypress', function(key) {
         if (key.keyCode === 13 && !loginSend.is(':disabled')) {
-            document.getElementById("loginSend").click();
+            loginSend.click();
         }
     });
 
     registerIdInput.on('keypress', function(key) {
         if (key.keyCode === 13 && !registerSend.is(':disabled')) {
-            document.getElementById("registerSend").click();
+            registerSend.click();
         }
     });
 
     registerPassInput.on('keypress', function(key) {
         if (key.keyCode === 13 && !registerSend.is(':disabled')) {
-            document.getElementById("registerSend").click();
+            registerSend.click();
         }
     });
 
