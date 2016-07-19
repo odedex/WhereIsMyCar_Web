@@ -182,7 +182,7 @@ module.exports = function (app, io) {
                     if (!exists) {
                         res.status(400).send(FAILED_DB_WRITE_ERR_MSG + NO_ID_ERR_MSG);
                     } else {
-                        var entry = {date:timestamp, lat: lat, lng: lng};
+                        var entry = {date:new Date(timestamp), lat: lat, lng: lng};
                         gpsdb.addGPSEntry(id, entry, function(err) {
                             if (err) {
                                 res.status(500).send(FAILED_DB_OPER_ERR_MSG + err.toString());
@@ -352,7 +352,7 @@ function isAlphanumeric(string){
     return (/^[a-z0-9]+$/i.test( string ));
 }
 
-var sha256 = require('sha256');
+var sha256 = require('js-sha256');
 function generateSession(username) {
     var date = new Date();
     return (sha256(username + date.toString() + Math.random().toString()));

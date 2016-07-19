@@ -14,7 +14,7 @@ $(function() {
 
     loginSend.click(function() {
         if (isAlphanumeric(loginIdInput.val()) && isAlphanumeric(loginPassInput.val())) {
-            var query = {user:loginIdInput.val(), pass:SHA256(loginPassInput.val())};
+            var query = {user:loginIdInput.val(), pass:sha256(loginPassInput.val())};
             $.post('/loginuser', query, function (res, status, jqxhr) {
                 if (res.redirect) {
                     document.location.href = res.redirect;
@@ -29,7 +29,7 @@ $(function() {
 
     registerSend.click(function() {
         if (isAlphanumeric(registerIdInput.val()) && isAlphanumeric(registerPassInput.val())) {
-            var query = {user:registerIdInput.val(), pass:SHA256(registerPassInput.val())};
+            var query = {user:registerIdInput.val(), pass:sha256(registerPassInput.val())};
             $.post('/registeruser', query, function(res, staus, jqxhr) {
                 if (res.redirect) {
                     document.location.href = res.redirect;
