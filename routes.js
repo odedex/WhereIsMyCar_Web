@@ -23,16 +23,16 @@ module.exports = function (app, io) {
     function validateSession(token) {
         if (token) {
             var session = sessions[token];
-            if (new Date() - session.time < SESSION_TTL) {
-                sessions[token] = {time: new Date(), user: session.user};
-                return true;
-            } else {
-                delete sessions[token];
-                return false;
+            if (session) {
+                if (new Date() - session.time < SESSION_TTL) {
+                    sessions[token] = {time: new Date(), user: session.user};
+                    return true;
+                } else {
+                    delete sessions[token];
+                }
             }
-        } else {
-            return false;
         }
+        return false;
     }
 
     app.get('/', function (req, res) {
