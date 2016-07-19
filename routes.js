@@ -30,7 +30,6 @@ module.exports = function (app, io) {
                 } else {
                     delete sessions[token];
                 }
-
             }
         }
         return false;
