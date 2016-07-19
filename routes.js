@@ -99,7 +99,7 @@ module.exports = function (app, io) {
                     sessions[token] = {time:new Date(), user:user};
                     req.session.token = token;
 
-                    res.status(303).send({redirect: '/devices'});
+                    res.status(200).send({redirect: '/devices'});
                     //TODO: set session
                 }
             })
@@ -121,8 +121,12 @@ module.exports = function (app, io) {
         if (validateSession(req.session.token)) {
             var device = req.body.device;
             if (device) {
-                req.session.device = device;
-                res.status(200).send({redirect:'/gpsmap'});
+                var token = req.session.token;
+                var user = sessions[token].user;
+                usersdb.deviceNameToID(user, device, function(err, deviceId) {
+                    req.session.device = deviceId;
+                    res.status(200).send({redirect:'/gpsmap'});
+                });
             } else {
                 res.status(403).send({redirect:'/devices'});
             }
@@ -252,7 +256,7 @@ module.exports = function (app, io) {
                                                     }
                                                 }
                                                 delete waitingDevices[id];
-                                                res.status(200).send(ID_REGISTER_SUCCESS_MSG);
+                                                res.status(200).send(deviceKey);
                                             }
                                         })
                                     }
@@ -290,28 +294,30 @@ module.exports = function (app, io) {
 
         socket.existingRequest = false;
         socket.on('queryGPSName', function () {
-            var name = socket.handshake.session.device;
-            socket.emit('deviceName', name);
-            usersdb.deviceNameToID(sessions[socket.handshake.session.token].user, name, function(err, deviceID) {
-                gpsdb.queryExistingDevice(deviceID, function (existsErr, exists) {
-                    if (exists && !socket.existingRequest) {
-                        socket.existingRequest = true;
-                        gpsdb.getSingleGPSData(deviceID, function(stream) {
-                            stream.on('data', function(doc) {
-                                socket.emit('newGPSEntry', doc);
-                            });
-                            stream.on('error', function(err) {
-                                socket.emit('newGPSEntryError', err);
-                            });
-                            stream.on('end', function() {
-                                socket.existingRequest = false;
-                                socket.emit('newGPSEntryEnd');
-                            });
+            var deviceID = socket.handshake.session.device;
+            var token = socket.handshake.session.token;
+            var user = sessions[token].user;
+            usersdb.deviceIDToName(user, deviceID, function(err, name) {
+                socket.emit('deviceName', name);
+            });
+            gpsdb.queryExistingDevice(deviceID, function (existsErr, exists) {
+                if (exists && !socket.existingRequest) {
+                    socket.existingRequest = true;
+                    gpsdb.getSingleGPSData(deviceID, function(stream) {
+                        stream.on('data', function(doc) {
+                            socket.emit('newGPSEntry', doc);
                         });
-                    } else {
-                        socket.emit('newGPSEntryError', {err: NO_ID_ERR_MSG});
-                    }
-                });
+                        stream.on('error', function(err) {
+                            socket.emit('newGPSEntryError', err);
+                        });
+                        stream.on('end', function() {
+                            socket.existingRequest = false;
+                            socket.emit('newGPSEntryEnd');
+                        });
+                    });
+                } else {
+                    socket.emit('newGPSEntryError', {err: NO_ID_ERR_MSG});
+                }
             });
         });
 

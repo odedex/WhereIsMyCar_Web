@@ -25,7 +25,10 @@ MongoClient.connect("mongodb://usersadmin:admin@ds040349.mlab.com:40349/wheremyc
 module.exports.getUserDevices = function (id, callback) {
     if (usersDB) {
         usersDB.collection(id).find().toArray(function (err, items) {
-            return callback(items[0].devices);
+            if (items) {
+                return callback(items[0].devices);
+            }
+            return callback(null);
         });
     } else {
         return callback(null);
@@ -111,6 +114,24 @@ module.exports.deviceNameToID = function(username, deviceName, callback) {
                     return callback (err, items[0].devices[0].id);
                 } else {
                     return callback("No such name");
+                }
+            }
+        });
+    } else {
+        return callback(DB_DOWN_ERR_MSG);
+    }
+};
+
+module.exports.deviceIDToName = function(username, deviceID, callback) {
+    if (usersDB) {
+        usersDB.collection(username).find({"devices.id" : deviceID}, {"devices.$": 1}).toArray(function (err, items) {
+            if (err) {
+                return callback(err);
+            } else {
+                if (items.length > 0) {
+                    return callback (err, items[0].devices[0].name);
+                } else {
+                    return callback("No such id");
                 }
             }
         });

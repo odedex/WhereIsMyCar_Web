@@ -17,11 +17,7 @@ $(function() {
             var query = {name: deviceNameInput.val(), id:deviceIDInput.val()};
             $.post('/registrdevicetouser', query, function(res, status, jqxhr) {
                 if (res.setErrMsg) {
-                    console.log("got error msg");
                     setRegisterDeviceMsg(res.setErrMsg);
-                } else {
-
-                    console.log("no error msg");
                 }
             })
         }
