@@ -36,7 +36,7 @@ $(function() {
         });
     });
 
-    socket.emit('queryGPSName');
+    socket.emit('queryGPSData');
 
     socket.on('deviceName', function(name) {
         deviceName.html(name);
@@ -110,7 +110,7 @@ $(function() {
             jQuery(this).data('mapMarker').markerInfoWindowClose();
         });
 
-        li.append(document.createTextNode(time.toString()));
+        li.append(time.toString()); //TODO: need to adjust for time zones?
 
         if(idx === 0) {
             routeSteps.prepend(li);

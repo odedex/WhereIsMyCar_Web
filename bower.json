@@ -1,0 +1,30 @@
+{
+  "name": "WhereIsMyCar",
+  "description": "",
+  "main": "app.js",
+  "authors": [
+    "Oded Abramas & Nadav Rotenberg"
+  ],
+  "license": "HUJI",
+  "keywords": [
+    "GPS",
+    "Raspberry",
+    "PI"
+  ],
+  "homepage": "https://github.com/odedex/WhereIsMyCar_Web",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "eonasdan-bootstrap-datetimepicker": "^4.17.37",
+    "jquery": "2.1.4",
+    "bootstrap": "^3.3.6",
+    "js-sha256": "^0.3.0"
+  }
+}

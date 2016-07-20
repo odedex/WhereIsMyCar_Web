@@ -23,10 +23,28 @@ MongoClient.connect("mongodb://admin:adminadmin@ds040309.mlab.com:40309/wheremyc
     }
 });
 
-module.exports.getSingleGPSData = function (id, callback) {
+module.exports.getSingleGPSData = function (device, callback) {
     if (gpsDB) {
-        // console.log("queriying gps data for " + id.toString());
-        var stream = gpsDB.collection(id).find().stream();
+        var id = device.id;
+        var start = device.startTime;
+        var end = device.endTime;
+        var stream;
+        if (start && start !== "") {
+            start = new Date(start);
+            if (end && end !== "") {
+                end = new Date(end);
+                stream = gpsDB.collection(id).find({"date": {"$gte": start, "$lt": end}}).stream();
+            } else {
+                stream = gpsDB.collection(id).find({"date": {"$gte": start}}).stream();
+            }
+        } else if (end && end !== "") {
+            end = new Date(end);
+            stream = gpsDB.collection(id).find({"date": {"$lt": end}}).stream();
+        } else {
+            stream = gpsDB.collection(id).find().stream();
+        }
+
+        // var stream = gpsDB.collection(id).find().stream();
         return callback(stream);
     } else {
         return callback(null);

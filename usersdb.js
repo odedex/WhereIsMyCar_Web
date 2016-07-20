@@ -122,6 +122,7 @@ module.exports.deviceNameToID = function(username, deviceName, callback) {
     }
 };
 
+//TODO: is this redundant?
 module.exports.deviceIDToName = function(username, deviceID, callback) {
     if (usersDB) {
         usersDB.collection(username).find({"devices.id" : deviceID}, {"devices.$": 1}).toArray(function (err, items) {

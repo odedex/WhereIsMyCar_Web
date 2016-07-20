@@ -61,8 +61,20 @@
                 <div class="panel-heading">
                     <h3 class="panel-title">Devices</h3>
                 </div>
-                <!--<input type="text" name="birthdate" value="10/24/1984" />-->
-                <!--<input type="text" name="birthdate" value="10/24/1984" />-->
+                <div class='input-group date' id='dateTimeStart'>
+                    <input type='text' class="form-control" placeholder="Start date." id="startTimeInput"/>
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+                <div class="form-group">
+                    <div class='input-group date' id='dateTimeEnd'>
+                        <input type='text' class="form-control" placeholder="End date. Leave blank for live updates." id="endTimeInput"/>
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                    </div>
+                </div>
 
                 <div id="route" class="panel-body">
                     <ul id="devicesList" class="list-group">

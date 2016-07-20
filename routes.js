@@ -118,13 +118,16 @@ module.exports = function (app, io) {
     });
 
     app.post('/listendevice', function(req, res) {
+        //todo: add start time and end time support
         if (validateSession(req.session.token)) {
             var device = req.body.device;
             if (device) {
                 var token = req.session.token;
                 var user = sessions[token].user;
                 usersdb.deviceNameToID(user, device, function(err, deviceId) {
-                    req.session.device = deviceId;
+                    var start = req.body.startTime;
+                    var end = req.body.endTime;
+                    req.session.device = {id: deviceId, name: device, startTime:start, endTime:end};
                     res.status(200).send({redirect:'/gpsmap'});
                 });
             } else {
@@ -193,7 +196,9 @@ module.exports = function (app, io) {
                                 for (var socketKey in io.sockets.connected) {
                                     if (io.sockets.connected.hasOwnProperty(socketKey)) {
                                         var socket = io.sockets.connected[socketKey];
-                                        if (socket.handshake.session.device === id) {
+                                        var socketDeviceID = socket.handshake.session.device.id;
+                                        var socketDeviceEndTime = socket.handshake.session.device.endTime;
+                                        if (socketDeviceID === id && (socketDeviceEndTime === "" || (!socketDeviceEndTime))) {
                                             //todo: listeningTo may be able to be changed in the new structure.
                                             socket.emit('newGPSEntry', entry);
                                         }
@@ -293,17 +298,19 @@ module.exports = function (app, io) {
     io.on('connection', function(socket) {
 
         socket.existingRequest = false;
-        socket.on('queryGPSName', function () {
-            var deviceID = socket.handshake.session.device;
+        socket.on('queryGPSData', function () {
+            var device = socket.handshake.session.device;
+            var deviceID = device.id;
+            var deviceName = device.name;
             var token = socket.handshake.session.token;
             var user = sessions[token].user;
-            usersdb.deviceIDToName(user, deviceID, function(err, name) {
-                socket.emit('deviceName', name);
-            });
+
+            socket.emit('deviceName', deviceName);
+
             gpsdb.queryExistingDevice(deviceID, function (existsErr, exists) {
                 if (exists && !socket.existingRequest) {
                     socket.existingRequest = true;
-                    gpsdb.getSingleGPSData(deviceID, function(stream) {
+                    gpsdb.getSingleGPSData(device, function(stream) {
                         stream.on('data', function(doc) {
                             socket.emit('newGPSEntry', doc);
                         });

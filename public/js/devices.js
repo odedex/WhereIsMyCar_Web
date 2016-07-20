@@ -10,6 +10,11 @@ $(function() {
     var logOut = $("#logOut");
 
     var devicesList = $("#devicesList");
+    var dateTimeStart = $("#dateTimeStart");
+    var dateTimeEnd = $("#dateTimeEnd");
+
+    var startTimeInput = $("#startTimeInput");
+    var endTimeInput = $("#endTimeInput");
 
     deviceRegisterSend.click(function () {
         if (isAlphanumeric(deviceNameInput.val()) && isAlphanumeric(deviceIDInput.val())) {
@@ -57,7 +62,7 @@ $(function() {
             jQuery(this).css('background-color', 'white');
         });
         li.click(function() {
-            $.post("/listendevice", {device:device}, function (res, status, jqxhr) {
+            $.post("/listendevice", {device:device, startTime: startTimeInput.val(), endTime: endTimeInput.val()}, function (res, status, jqxhr) {
                 document.location.href = res.redirect;
             })
         });
@@ -79,5 +84,17 @@ $(function() {
     function isAlphanumeric(string){
         return (/^[a-z0-9]+$/i.test( string ));
     }
+    dateTimeStart.datetimepicker({
+        useCurrent: false //Important! See issue #1075
+    });
+    dateTimeEnd.datetimepicker({
+        useCurrent: false //Important! See issue #1075
+    });
+    dateTimeStart.on("dp.change", function (e) {
+        dateTimeEnd.data("DateTimePicker").minDate(e.date);
+    });
+    dateTimeEnd.on("dp.change", function (e) {
+        dateTimeStart.data("DateTimePicker").maxDate(e.date);
+    });
 
 });
