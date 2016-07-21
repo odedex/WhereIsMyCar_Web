@@ -64,7 +64,7 @@ module.exports.registerNewUser = function (query, callback) {
                             if (callback) {
                                 return callback(err, collection);
                             }
-                        })
+                        });
                     });
                 }
             }
@@ -96,7 +96,7 @@ module.exports.addDeviceToUser = function (user, device, callback) {
                     return callback("No such user found");
                 }
             }
-        })
+        });
     } else {
         if (callback) {
             return callback(DB_DOWN_ERR_MSG);

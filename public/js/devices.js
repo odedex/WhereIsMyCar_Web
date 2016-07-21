@@ -24,7 +24,7 @@ $(function() {
                 if (res.setErrMsg) {
                     setRegisterDeviceMsg(res.setErrMsg);
                 }
-            })
+            });
         }
     });
 
@@ -64,7 +64,7 @@ $(function() {
         li.click(function() {
             $.post("/listendevice", {device:device, startTime: startTimeInput.val(), endTime: endTimeInput.val()}, function (res, status, jqxhr) {
                 document.location.href = res.redirect;
-            })
+            });
         });
         devicesList.append(li);
     });
@@ -77,7 +77,7 @@ $(function() {
         if (msg) {
             deviceRegisterErrMsg.html(msg);
         } else {
-            deviceRegisterErrMsg.html("")
+            deviceRegisterErrMsg.html("");
         }
     }
 

@@ -79,7 +79,7 @@ module.exports = function (app, io) {
                 } else {
                     res.status(200).send({setErrMsg: BAD_CREDS_ERR_MSG});
                 }
-            })
+            });
         } else {
             res.status(200).send({setErrMsg: "Please use only numbers and characters."});
         }
@@ -102,7 +102,7 @@ module.exports = function (app, io) {
                     res.status(200).send({redirect: '/devices'});
                     //TODO: set session
                 }
-            })
+            });
         }
     });
 
@@ -205,10 +205,10 @@ module.exports = function (app, io) {
                                     }
                                 }
                             }
-                        })
+                        });
                     }
                 }
-            })
+            });
         } else {
             res.status(400).send(BAD_UPDATE_FORMAT_ERR_MSG);
         }
@@ -263,14 +263,14 @@ module.exports = function (app, io) {
                                                 delete waitingDevices[id];
                                                 res.status(200).send(deviceKey);
                                             }
-                                        })
+                                        });
                                     }
                                 });
                             });
 
                         }
                     }
-                })
+                });
             }
         } else {
             res.status(400).send(BAD_REGISTER_FORMAT_ERR_MSG);
@@ -350,7 +350,7 @@ module.exports = function (app, io) {
             } else {
                 callback(newDeviceKey);
             }
-        })
+        });
 
     }
 };

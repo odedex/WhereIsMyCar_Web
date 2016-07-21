@@ -72,7 +72,7 @@ $(function() {
         if (msg) {
             loginErrMsg.html(msg);
         } else {
-            loginErrMsg.html("")
+            loginErrMsg.html("");
         }
     }
 
@@ -80,7 +80,7 @@ $(function() {
         if (msg) {
             registerErrMsg.html(msg);
         } else {
-            registerErrMsg.html("")
+            registerErrMsg.html("");
         }
     }
 

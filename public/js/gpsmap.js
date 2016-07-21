@@ -17,7 +17,7 @@ $(function() {
     // map related variables
     var markers = [];
     var bounds = new google.maps.LatLngBounds();
-    var directionsDisplay = new google.maps.DirectionsRenderer;
+    var directionsDisplay = new google.maps.DirectionsRenderer();
     var infowindow = new google.maps.InfoWindow();
     var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     var routeStep = 1;
@@ -142,7 +142,7 @@ $(function() {
         if (msg) {
             errorMsg.html(msg);
         } else {
-            errorMsg.html("")
+            errorMsg.html("");
         }
     }
 });
