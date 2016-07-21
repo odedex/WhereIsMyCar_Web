@@ -196,11 +196,13 @@ module.exports = function (app, io) {
                                 for (var socketKey in io.sockets.connected) {
                                     if (io.sockets.connected.hasOwnProperty(socketKey)) {
                                         var socket = io.sockets.connected[socketKey];
-                                        var socketDeviceID = socket.handshake.session.device.id;
-                                        var socketDeviceEndTime = socket.handshake.session.device.endTime;
-                                        if (socketDeviceID === id && (socketDeviceEndTime === "" || (!socketDeviceEndTime))) {
-                                            //todo: listeningTo may be able to be changed in the new structure.
-                                            socket.emit('newGPSEntry', entry);
+                                        if (socket.handshake && socket.handshake.device) {
+                                            var socketDeviceID = socket.handshake.session.device.id;
+                                            var socketDeviceEndTime = socket.handshake.session.device.endTime;
+                                            if (socketDeviceID === id && (socketDeviceEndTime === "" || (!socketDeviceEndTime))) {
+                                                //todo: listeningTo may be able to be changed in the new structure.
+                                                socket.emit('newGPSEntry', entry);
+                                            }
                                         }
                                     }
                                 }
