@@ -11,6 +11,8 @@ $(function() {
     var registerSend = $("#registerSend");
     var registerErrMsg = $("#registerErrMsg");
 
+    var ENTER_KEY = 13;
+
 
     loginSend.click(function() {
         if (isAlphanumeric(loginIdInput.val()) && isAlphanumeric(loginPassInput.val())) {
@@ -38,50 +40,41 @@ $(function() {
                 }
             });
         } else {
-            registerErrMsg("Please use only numbers and characters.");
+            setRegisterMsg("Please use only numbers and characters.");
         }
     });
 
     loginIdInput.on('keypress', function(key) {
-        if (key.keyCode === 13 && !loginSend.is(':disabled')) {
+        if (key.keyCode === ENTER_KEY && !loginSend.is(':disabled')) {
             loginSend.click();
         }
     });
 
     loginPassInput.on('keypress', function(key) {
-        if (key.keyCode === 13 && !loginSend.is(':disabled')) {
+        if (key.keyCode === ENTER_KEY && !loginSend.is(':disabled')) {
             loginSend.click();
         }
     });
 
     registerIdInput.on('keypress', function(key) {
-        if (key.keyCode === 13 && !registerSend.is(':disabled')) {
+        if (key.keyCode === ENTER_KEY && !registerSend.is(':disabled')) {
             registerSend.click();
         }
     });
 
     registerPassInput.on('keypress', function(key) {
-        if (key.keyCode === 13 && !registerSend.is(':disabled')) {
+        if (key.keyCode === ENTER_KEY && !registerSend.is(':disabled')) {
             registerSend.click();
         }
     });
 
 
-
     function setLoginMsg(msg) {
-        if (msg) {
-            loginErrMsg.html(msg);
-        } else {
-            loginErrMsg.html("");
-        }
+        loginErrMsg.html(msg || "");
     }
 
     function setRegisterMsg(msg) {
-        if (msg) {
-            registerErrMsg.html(msg);
-        } else {
-            registerErrMsg.html("");
-        }
+        registerErrMsg.html(msg || "");
     }
 
     function isAlphanumeric(string){

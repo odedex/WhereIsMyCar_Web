@@ -102,12 +102,12 @@ $(function() {
         li.data('mapMarker', marker);
         li.addClass('list-group-item routestep');
         li.mouseover(function() {
-            jQuery(this).css('background-color', '#e6e6e6');
-            jQuery(this).data('mapMarker').markerInfoWindow();
+            $(this).css('background-color', '#e6e6e6');
+            $(this).data('mapMarker').markerInfoWindow();
         });
         li.mouseout(function() {
-            jQuery(this).css('background-color', 'white');
-            jQuery(this).data('mapMarker').markerInfoWindowClose();
+            $(this).css('background-color', 'white');
+            $(this).data('mapMarker').markerInfoWindowClose();
         });
 
         li.append(time.toString()); //TODO: need to adjust for time zones?

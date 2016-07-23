@@ -16,7 +16,12 @@ $(function() {
     var startTimeInput = $("#startTimeInput");
     var endTimeInput = $("#endTimeInput");
 
+    var ENTER_KEY = 13;
+
     deviceRegisterSend.click(function () {
+        if (deviceNameInput.val() === "" || deviceIDInput.val() === "") {
+            setRegisterDeviceMsg("Please enter a name and ID");
+        }
         if (isAlphanumeric(deviceNameInput.val()) && isAlphanumeric(deviceIDInput.val())) {
             //TODO: do we need to check if device id is alpha numeric?
             var query = {name: deviceNameInput.val(), id:deviceIDInput.val()};
@@ -36,13 +41,13 @@ $(function() {
     });
 
     deviceNameInput.on('keypress', function(key) {
-        if (key.keyCode === 13 && !deviceRegisterSend.is(':disabled')) {
+        if (key.keyCode === ENTER_KEY && !deviceRegisterSend.is(':disabled')) {
             deviceRegisterSend.click();
         }
     });
 
     deviceIDInput.on('keypress', function(key) {
-        if (key.keyCode === 13 && !deviceRegisterSend.is(':disabled')) {
+        if (key.keyCode === ENTER_KEY && !deviceRegisterSend.is(':disabled')) {
             deviceRegisterSend.click();
         }
     });
@@ -56,13 +61,16 @@ $(function() {
         );
         li.addClass('list-group-item device');
         li.mouseover(function() {
-            jQuery(this).css('background-color', '#e6e6e6');
+            $(this).css('background-color', '#e6e6e6');
         });
         li.mouseout(function() {
-            jQuery(this).css('background-color', 'white');
+            $(this).css('background-color', 'white');
         });
         li.click(function() {
-            $.post("/listendevice", {device:device, startTime: startTimeInput.val(), endTime: endTimeInput.val()}, function (res, status, jqxhr) {
+            $.post("/listendevice", {   device:device,
+                                        startTime: startTimeInput.val(),
+                                        endTime: endTimeInput.val()},
+                                    function (res, status, jqxhr) {
                 document.location.href = res.redirect;
             });
         });
@@ -74,21 +82,17 @@ $(function() {
     });
 
     function setRegisterDeviceMsg(msg) {
-        if (msg) {
-            deviceRegisterErrMsg.html(msg);
-        } else {
-            deviceRegisterErrMsg.html("");
-        }
+        deviceRegisterErrMsg.html(msg || "");
     }
 
     function isAlphanumeric(string){
         return (/^[a-z0-9]+$/i.test( string ));
     }
     dateTimeStart.datetimepicker({
-        useCurrent: false //Important! See issue #1075
+        useCurrent: false
     });
     dateTimeEnd.datetimepicker({
-        useCurrent: false //Important! See issue #1075
+        useCurrent: false
     });
     dateTimeStart.on("dp.change", function (e) {
         dateTimeEnd.data("DateTimePicker").minDate(e.date);

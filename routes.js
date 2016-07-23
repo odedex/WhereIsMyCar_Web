@@ -69,10 +69,12 @@ module.exports = function (app, io) {
             var query = {user: user, pass: pass};
             usersdb.queryExistingUser(query, function(err, valid) {
                 if (valid === 1) {
-                    //TODO: set session
                     var token;
-                    do {token = generateSession(user);} while (sessions[token]);
-                    sessions[token] = {time:new Date(), user:user};
+                    do {
+                        token = generateSession(user);
+                    } while (sessions[token]);
+                    sessions[token] = { time:new Date(),
+                                        user:user};
                     req.session.token = token;
 
                     res.status(200).send({redirect: '/devices'});
@@ -353,11 +355,13 @@ module.exports = function (app, io) {
                 callback(newDeviceKey);
             }
         });
-
     }
 };
 
 function isAlphanumeric(string){
+    if (!string) {
+        return false;
+    }
     return (/^[a-z0-9]+$/i.test( string ));
 }
 
