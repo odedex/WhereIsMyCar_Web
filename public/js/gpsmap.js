@@ -123,19 +123,26 @@ $(function() {
     }
 
     function addStepAndMarker(pos, time) {
-        var marker = createMarker(pos);
+        setTimeout(function () {
+            var marker = createMarker(pos);
+            setTimeout(function () {
+                for (var i = 0 ; i < steps.length ; i += 1) {
+                    if (new Date(time) < new Date(steps[i].date)) {
+                        steps.splice(i, 0, {marker: marker, date:time});
+                        break;
+                    }
+                }
+                setTimeout(function () {
+                    if (i === steps.length) {
+                        steps.push({marker: marker, date:time});
+                    }
 
-        for (var i = 0 ; i < steps.length ; i += 1) {
-            if (new Date(time) < new Date(steps[i].date)) {
-                steps.splice(i, 0, {marker: marker, date:time});
-                break;
-            }
-        }
-        if (i === steps.length) {
-            steps.push({marker: marker, date:time});
-        }
-        
-        addRouteStep(time, marker, i);
+                    addRouteStep(time, marker, i);
+                }, 0)
+
+            }, 0);
+
+        }, 0);
     }
 
     function setErrMsg(msg) {
