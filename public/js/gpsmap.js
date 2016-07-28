@@ -36,25 +36,40 @@ $(function() {
         });
     });
 
-    socket.emit('queryGPSData');
+    socket.emit('queryGPSDataBulk');
 
     socket.on('deviceName', function(name) {
         deviceName.html(name);
     });
 
-    socket.on('newGPSEntry', function(entry) {
+    socket.on('newGPSEntryBulk', function(entry) {
         var latlng = new google.maps.LatLng({lat: parseFloat(entry.lat), lng: parseFloat(entry.lng)});
         addStepAndMarker(latlng, entry.date);
     });
 
-    socket.on('newGPSEntryError', function(err) {
+    socket.on('newGPSEntryLive', function(entry) {
+        var latlng = new google.maps.LatLng({lat: parseFloat(entry.lat), lng: parseFloat(entry.lng)});
+        fitMap(addStepAndMarker(latlng, entry.date));
+    });
+
+    socket.on('newGPSEntryErrorBulk', function(err) {
         setErrMsg(err);
     });
 
-    function fitMap() {
-        for (var i = 0; i < markers.length; i++) {
-            bounds.extend(markers[i].getPosition());
-        }
+    socket.on('newGPSEntryBulkEnd', function() {
+        var lastTen = markers.slice(Math.max(markers.length - 5, 0));
+        var processed = 0;
+        lastTen.forEach(function(marker) {
+            bounds.extend(marker.getPosition());
+            processed += 1;
+            if (processed === lastTen.length) {
+                map.fitBounds(bounds);
+            }
+        });
+    });
+
+    function fitMap(newMarker) {
+        bounds.extend(newMarker.getPosition());
         map.fitBounds(bounds);
     }
 
@@ -89,9 +104,6 @@ $(function() {
         });
 
 
-        bounds.extend(marker.getPosition());
-        map.fitBounds(bounds);
-
 
         return marker;
     }
@@ -123,26 +135,19 @@ $(function() {
     }
 
     function addStepAndMarker(pos, time) {
-        setTimeout(function () {
-            var marker = createMarker(pos);
-            setTimeout(function () {
-                for (var i = 0 ; i < steps.length ; i += 1) {
-                    if (new Date(time) < new Date(steps[i].date)) {
-                        steps.splice(i, 0, {marker: marker, date:time});
-                        break;
-                    }
-                }
-                setTimeout(function () {
-                    if (i === steps.length) {
-                        steps.push({marker: marker, date:time});
-                    }
+        var marker = createMarker(pos);
+        for (var i = 0 ; i < steps.length ; i += 1) {
+            if (new Date(time) < new Date(steps[i].date)) {
+                steps.splice(i, 0, {marker: marker, date:time});
+                break;
+            }
+        }
+        if (i === steps.length) {
+            steps.push({marker: marker, date:time});
+        }
 
-                    addRouteStep(time, marker, i);
-                }, 0)
-
-            }, 0);
-
-        }, 0);
+        addRouteStep(time, marker, i);
+        return marker;
     }
 
     function setErrMsg(msg) {

@@ -203,7 +203,7 @@ module.exports = function (app, io) {
                                             var socketDeviceEndTime = socket.handshake.session.device.endTime;
                                             if (socketDeviceID === id && (socketDeviceEndTime === "" || (!socketDeviceEndTime))) {
                                                 //todo: listeningTo may be able to be changed in the new structure.
-                                                socket.emit('newGPSEntry', entry);
+                                                socket.emit('newGPSEntryLive', entry);
                                             }
                                         }
                                     }
@@ -302,7 +302,7 @@ module.exports = function (app, io) {
     io.on('connection', function(socket) {
 
         socket.existingRequest = false;
-        socket.on('queryGPSData', function () {
+        socket.on('queryGPSDataBulk', function () {
             var device = socket.handshake.session.device;
             var deviceID = device.id;
             var deviceName = device.name;
@@ -316,14 +316,14 @@ module.exports = function (app, io) {
                     socket.existingRequest = true;
                     gpsdb.getSingleGPSData(device, function(stream) {
                         stream.on('data', function(doc) {
-                            socket.emit('newGPSEntry', doc);
+                            socket.emit('newGPSEntryBulk', doc);
                         });
                         stream.on('error', function(err) {
-                            socket.emit('newGPSEntryError', err);
+                            socket.emit('newGPSEntryBulkError', err);
                         });
                         stream.on('end', function() {
                             socket.existingRequest = false;
-                            socket.emit('newGPSEntryEnd');
+                            socket.emit('newGPSEntryBulkEnd');
                         });
                     });
                 } else {
