@@ -37,9 +37,9 @@ module.exports = function (app, io) {
 
     app.get('/', function (req, res) {
         if (validateSession(req.session.token)) {
-            res.status(303).redirect('/devices');
+            res.redirect('/devices');
         } else {
-            res.status(200).render('login');
+            res.render('login');
         }
     });
 
@@ -48,17 +48,17 @@ module.exports = function (app, io) {
             if (req.session.device) {
                 delete req.session.device;
             }
-            res.status(200).render('devices');
+            res.render('devices');
         } else {
-            res.status(403).redirect('../');
+            res.redirect('../');
         }
     });
 
     app.get('/gpsmap', function(req, res) {
         if (validateSession(req.session.token) && req.session.device) {
-            res.status(200).render('gpsmap');
+            res.render('gpsmap');
         } else {
-            res.status(403).redirect('../');
+            res.redirect('../');
         }
     });
 
@@ -77,13 +77,13 @@ module.exports = function (app, io) {
                                         user:user};
                     req.session.token = token;
 
-                    res.status(200).send({redirect: '/devices'});
+                    res.send({redirect: '/devices'});
                 } else {
-                    res.status(200).send({setErrMsg: BAD_CREDS_ERR_MSG});
+                    res.send({setErrMsg: BAD_CREDS_ERR_MSG});
                 }
             });
         } else {
-            res.status(200).send({setErrMsg: "Please use only numbers and characters."});
+            res.send({setErrMsg: "Please use only numbers and characters."});
         }
     });
 
@@ -94,15 +94,14 @@ module.exports = function (app, io) {
             var query = {user: user, pass: pass};
             usersdb.registerNewUser(query, function(err) {
                 if (err) {
-                    res.status(200).send({setErrMsg: err.toString()});
+                    res.send({setErrMsg: err.toString()});
                 } else {
                     var token;
                     do {token = generateSession(user);} while (sessions[token]);
                     sessions[token] = {time:new Date(), user:user};
                     req.session.token = token;
 
-                    res.status(200).send({redirect: '/devices'});
-                    //TODO: set session
+                    res.send({redirect: '/devices'});
                 }
             });
         }
@@ -113,14 +112,13 @@ module.exports = function (app, io) {
         if (token && sessions[token]) {
             delete sessions[token];
             delete req.session.token;
-            res.status(200).send({redirect:'/'});
+            res.send({redirect:'/'});
         } else {
-            res.status(403).send({redirect:'/'});
+            res.send({redirect:'/'});
         }
     });
 
     app.post('/listendevice', function(req, res) {
-        //todo: add start time and end time support
         if (validateSession(req.session.token)) {
             var device = req.body.device;
             if (device) {
@@ -130,18 +128,17 @@ module.exports = function (app, io) {
                     var start = req.body.startTime;
                     var end = req.body.endTime;
                     req.session.device = {id: deviceId, name: device, startTime:start, endTime:end};
-                    res.status(200).send({redirect:'/gpsmap'});
+                    res.send({redirect:'/gpsmap'});
                 });
             } else {
-                res.status(403).send({redirect:'/devices'});
+                res.send({redirect:'/devices'});
             }
         } else {
-            res.status(403).send({redirect:'/'});
+            res.send({redirect:'/'});
         }
     });
 
     app.post('/registrdevicetouser', function(req, res) {
-        //TODO: add test to make sure device name is not already in use
         if (validateSession(req.session.token)) {
             var name = req.body.name,
                 id = req.body.id;
@@ -151,20 +148,20 @@ module.exports = function (app, io) {
 
                 usersdb.isNameTaken(user, name, function(err, isTaken) {
                     if (err) {
-                        res.status(200).send({setErrMsg: err.toString()});
+                        res.send({setErrMsg: err.toString()});
                     } else {
                         if (isTaken) {
-                            res.status(200).send({setErrMsg: DEVICE_NAME_TAKEN_MSG});
+                            res.send({setErrMsg: DEVICE_NAME_TAKEN_MSG});
                         } else {
                             waitingDevices[id] = {user:user, name:name};
                             // console.log(waitingDevices);
-                            res.status(200).send({setErrMsg: DEVICE_PENDING_MSG});
+                            res.send({setErrMsg: DEVICE_PENDING_MSG});
                         }
                     }
                 });
             }
         } else {
-            res.status(403).send({redirect:'/'});
+            res.send({redirect:'/'});
         }
     });
     
@@ -182,17 +179,17 @@ module.exports = function (app, io) {
         if (id && timestamp && lat && lng) {
             gpsdb.queryExistingDevice(id, function(err, exists) {
                 if (err) {
-                    res.status(500).send(FAILED_DB_OPER_ERR_MSG + err.toString());
+                    res.send(FAILED_DB_OPER_ERR_MSG + err.toString());
                 } else {
                     if (!exists) {
-                        res.status(400).send(FAILED_DB_WRITE_ERR_MSG + NO_ID_ERR_MSG);
+                        res.send(FAILED_DB_WRITE_ERR_MSG + NO_ID_ERR_MSG);
                     } else {
                         var entry = {date:new Date(timestamp), lat: lat, lng: lng};
                         gpsdb.addGPSEntry(id, entry, function(err) {
                             if (err) {
-                                res.status(500).send(FAILED_DB_OPER_ERR_MSG + err.toString());
+                                res.send(FAILED_DB_OPER_ERR_MSG + err.toString());
                             } else {
-                                res.status(200).send(SUCCESS_DB_WRITE_ERR_MSG);
+                                res.send(SUCCESS_DB_WRITE_ERR_MSG);
 
                                 // Live update sockets that listen to that same ID.
                                 for (var socketKey in io.sockets.connected) {
@@ -202,7 +199,6 @@ module.exports = function (app, io) {
                                             var socketDeviceID = socket.handshake.session.device.id;
                                             var socketDeviceEndTime = socket.handshake.session.device.endTime;
                                             if (socketDeviceID === id && (socketDeviceEndTime === "" || (!socketDeviceEndTime))) {
-                                                //todo: listeningTo may be able to be changed in the new structure.
                                                 socket.emit('newGPSEntryLive', entry);
                                             }
                                         }
@@ -214,7 +210,7 @@ module.exports = function (app, io) {
                 }
             });
         } else {
-            res.status(400).send(BAD_UPDATE_FORMAT_ERR_MSG);
+            res.send(BAD_UPDATE_FORMAT_ERR_MSG);
         }
     });
 
@@ -224,33 +220,32 @@ module.exports = function (app, io) {
     /**
      * Register a new device to the database
      */
-    //TODO: future work - implement functionality that avoids fake devices
     app.get('/register/:id', function (req, res) {
         var id = req.params.id;
         if (id) {
             if (!waitingDevices[id]) {
-                res.status(400).send(ID_NOT_YET_PENDING_MSG);
+                res.send(ID_NOT_YET_PENDING_MSG);
             } else {
                 gpsdb.queryExistingDevice(id, function(err, exists) {
                     if (err) {
-                        res.status(500).send(FAILED_DB_OPER_ERR_MSG + err.toString());
+                        res.send(FAILED_DB_OPER_ERR_MSG + err.toString());
                     } else {
                         if (exists) {
                             delete waitingDevices[i];
-                            res.status(400).send(ID_ALREADY_EXISTS_ERR_MSG);
+                            res.send(ID_ALREADY_EXISTS_ERR_MSG);
                         } else {
 
                             generateUniqueDeviceKey(id, function(deviceKey) {
                                 gpsdb.registerNewDevice(deviceKey, function(err) {
                                     if (err) {
-                                        res.status(500).send(FAILED_DB_OPER_ERR_MSG + err.toString());
+                                        res.send(FAILED_DB_OPER_ERR_MSG + err.toString());
                                     } else {
                                         var user = waitingDevices[id].user;
                                         var device = {name: waitingDevices[id].name, id:deviceKey};
                                         usersdb.addDeviceToUser(user, device, function (err) {
                                             if (err) {
                                                 //TODO: probably need to also revert the addition of the device to gpsdb
-                                                res.status(500).send(FAILED_DB_OPER_ERR_MSG + err.toString());
+                                                res.send(FAILED_DB_OPER_ERR_MSG + err.toString());
                                             } else {
                                                 var reqUser = waitingDevices[id].user;
                                                 // Live update socket to reflect the new device.
@@ -265,7 +260,7 @@ module.exports = function (app, io) {
                                                     }
                                                 }
                                                 delete waitingDevices[id];
-                                                res.status(200).send(deviceKey);
+                                                res.send(deviceKey);
                                             }
                                         });
                                     }
@@ -277,27 +272,9 @@ module.exports = function (app, io) {
                 });
             }
         } else {
-            res.status(400).send(BAD_REGISTER_FORMAT_ERR_MSG);
+            res.send(BAD_REGISTER_FORMAT_ERR_MSG);
         }
     });
-    
-    //TODO: http://stackoverflow.com/questions/1140189/converting-latitude-and-longitude-to-decimal-values
-    //TODO: update this
-    function ParseDMS(input) {
-        var parts = input.split(/[^\d\w]+/);
-        var lat = ConvertDMSToDD(parts[0], parts[1], parts[2], parts[3]);
-        var lng = ConvertDMSToDD(parts[4], parts[5], parts[6], parts[7]);
-    }
-
-    //TODO: update this
-    function ConvertDMSToDD(degrees, minutes, seconds, direction) {
-        var dd = degrees + minutes/60 + seconds/(60*60);
-
-        if (direction == "S" || direction == "W") {
-            dd = dd * -1;
-        } // Don't do anything for N or E
-        return dd;
-    }
 
     io.on('connection', function(socket) {
 
@@ -341,7 +318,6 @@ module.exports = function (app, io) {
                     });
                 }
             });
-            //TODO: populate rooms tied to the user according to the token
         });
 
     });
