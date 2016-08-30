@@ -1,3 +1,7 @@
+/**
+ * jQuery module to control /devices page on the webclient.
+ * function is invoked when the page fully loads.
+ */
 $(function() {
     var socket = io();
 
@@ -18,6 +22,9 @@ $(function() {
 
     var ENTER_KEY = 13;
 
+	/**
+     * button listener for registering a new device
+     */
     deviceRegisterSend.click(function () {
         if (deviceNameInput.val() === "" || deviceIDInput.val() === "") {
             setRegisterDeviceMsg("Please enter a name and ID");
@@ -33,27 +40,41 @@ $(function() {
         }
     });
 
-
+	/**
+     * button listener for logging out
+     */
     logOut.click(function() {
         $.post('/logoutuser', null, function (res, status, jqxhr) {
             document.location.href = res.redirect;
         });
     });
 
+	/**
+     * input listener for 'enter' key for a new device name
+     */
     deviceNameInput.on('keypress', function(key) {
         if (key.keyCode === ENTER_KEY && !deviceRegisterSend.is(':disabled')) {
             deviceRegisterSend.click();
         }
     });
 
+    /**
+     * input listener for 'enter' key for a new device id
+     */
     deviceIDInput.on('keypress', function(key) {
         if (key.keyCode === ENTER_KEY && !deviceRegisterSend.is(':disabled')) {
             deviceRegisterSend.click();
         }
     });
 
+	/**
+     * When the page fully loads, emit a signal to the server requesting all devices tied to this user
+     */
     socket.emit('populateDevicesRequest');
 
+	/**
+     * when the server sends the data for a new device object tied to the user, update the model accordingly
+     */
     socket.on('populateDevice', function(device) {
 
         var li = $(
@@ -77,17 +98,33 @@ $(function() {
         devicesList.append(li);
     });
 
+	/**
+     * event listener for setting an error message for registering a new device
+     */
     socket.on('setMsg', function(msg) {
         setRegisterDeviceMsg(msg);
     });
 
+	/**
+     * update the error message of the register new device window
+     * @param msg message to set
+     */
     function setRegisterDeviceMsg(msg) {
         deviceRegisterErrMsg.html(msg || "");
     }
 
+	/**
+     * check if a given string contains only characters and numbers
+     * @param string string to check
+     * @returns {boolean} true iff the string contains only characters and numbers
+     */
     function isAlphanumeric(string){
         return (/^[a-z0-9]+$/i.test( string ));
     }
+
+	/**
+     * date time picker elements javascript
+     */
     dateTimeStart.datetimepicker({
         useCurrent: false
     });
