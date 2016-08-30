@@ -15,6 +15,7 @@ module.exports = function (app, io) {
     var ID_NOT_YET_PENDING_MSG = "No such id is pending registration\r\n";
     var DEVICE_PENDING_MSG = "Device pending confirmation\r\n";
     var DEVICE_NAME_TAKEN_MSG = "Device name already in use\r\n";
+	var ALPHANUMERIC_ERR_MSG = "Please use only numbers and characters\r\n";
 
     var waitingDevices = {}; // deviceID -> requesting_user, name
     var sessions = {}; // token -> username, time
@@ -83,7 +84,7 @@ module.exports = function (app, io) {
                 }
             });
         } else {
-            res.send({setErrMsg: "Please use only numbers and characters."});
+            res.send({setErrMsg: ALPHANUMERIC_ERR_MSG});
         }
     });
 
@@ -216,7 +217,6 @@ module.exports = function (app, io) {
 
 
 
-
     /**
      * Register a new device to the database
      */
@@ -319,7 +319,6 @@ module.exports = function (app, io) {
                 }
             });
         });
-
     });
 
     function generateUniqueDeviceKey(id, callback) {

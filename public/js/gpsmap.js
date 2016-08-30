@@ -52,7 +52,7 @@ $(function() {
         fitMap(addStepAndMarker(latlng, entry.date));
     });
 
-    socket.on('newGPSEntryErrorBulk', function(err) {
+    socket.on('newGPSEntryBulkError', function(err) {
         setErrMsg(err);
     });
 
