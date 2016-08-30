@@ -1,6 +1,5 @@
 $(function() {
 
-    //todo update this entire javascript file.
     var socket = io();
 
     var chooseDevice = $("#chooseDevice");
