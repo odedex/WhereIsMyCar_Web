@@ -1,4 +1,6 @@
-// Retrieve
+/**
+ * middleware layer for the gps data database
+ */
 
 var MongoClient = require('mongodb').MongoClient;
 
@@ -23,6 +25,12 @@ MongoClient.connect("mongodb://admin:adminadmin@ds040309.mlab.com:40309/wheremyc
     }
 });
 
+/**
+ * retrieve all gps data for a single device
+ * @param device device id to query
+ * @param callback function that accepts a mongo stream object
+ * @returns {*}
+ */
 module.exports.getSingleGPSData = function (device, callback) {
     if (gpsDB) {
         var id = device.id;
@@ -43,15 +51,17 @@ module.exports.getSingleGPSData = function (device, callback) {
         } else {
             stream = gpsDB.collection(id).find().stream();
         }
-
-        // var stream = gpsDB.collection(id).find().stream();
         return callback(stream);
     } else {
         return callback(null);
-        // return callback(DB_DOWN_ERR_MSG);
     }
 };
 
+/**
+ * retrieve all devices and their data
+ * @param callback function that accepts a dictionary of devices
+ * @returns {*}
+ */
 module.exports.getAllGpsIDs = function (callback) {
     if (gpsDB) {
         gpsDB.listCollections().toArray(function(err, collections) {
@@ -62,7 +72,13 @@ module.exports.getAllGpsIDs = function (callback) {
     }
 };
 
-
+/**
+ * add a single gps entry to a device
+ * @param id device id
+ * @param entry entry to add
+ * @param callback function that accepts a result state of the call
+ * @returns {*}
+ */
 module.exports.addGPSEntry = function (id, entry, callback) {
     if (gpsDB) {
         gpsDB.collection(id).insertOne(entry, {w:1}, function(err, result) {
@@ -75,6 +91,12 @@ module.exports.addGPSEntry = function (id, entry, callback) {
     }
 };
 
+/**
+ * register a new device to the database
+ * @param id id of the new device
+ * @param callback optional function that accepts the mongo collection object of the new device
+ * @returns {*}
+ */
 module.exports.registerNewDevice = function (id, callback) {
     if (gpsDB) {
         queryExistingDevice(id, function(err, exists) {
@@ -103,6 +125,12 @@ module.exports.registerNewDevice = function (id, callback) {
     }
 };
 
+/**
+ * check if a device id exists
+ * @param id id to check
+ * @param callback function that accepts a boolean
+ * @returns {*}
+ */
 function queryExistingDevice (id, callback) {
     if (gpsDB) {
         gpsDB.listCollections().toArray(function(err, collections) {
@@ -123,7 +151,7 @@ function queryExistingDevice (id, callback) {
 module.exports.queryExistingDevice = queryExistingDevice;
 
 
-    /**
+/**
  * Check if db is up and ready
  * @returns {number} 0 if not yet init, -1 if init failed, 1 if up and ready
  */

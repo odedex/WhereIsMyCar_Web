@@ -1,4 +1,6 @@
-// Retrieve
+/**
+ * middleware layer for the users data database
+ */
 
 var MongoClient = require('mongodb').MongoClient;
 
@@ -22,6 +24,12 @@ MongoClient.connect("mongodb://usersadmin:admin@ds040349.mlab.com:40349/wheremyc
     }
 });
 
+/**
+ * get all devices registered to a user
+ * @param id id of the user
+ * @param callback function that receives an array of devices
+ * @returns {*}
+ */
 module.exports.getUserDevices = function (id, callback) {
     if (usersDB) {
         usersDB.collection(id).find().toArray(function (err, items) {
@@ -36,16 +44,12 @@ module.exports.getUserDevices = function (id, callback) {
     }
 };
 
-module.exports.getAllGpsIDs = function (callback) {
-    if (usersDB) {
-        usersDB.listCollections().toArray(function(err, collections) {
-            return callback(err, collections);
-        });
-    } else {
-        return callback(DB_DOWN_ERR_MSG);
-    }
-};
-
+/**
+ * register a new user to the database
+ * @param query user object to register
+ * @param callback optional function that receives the mongo collection created by the database
+ * @returns {*}
+ */
 module.exports.registerNewUser = function (query, callback) {
     if (usersDB) {
         queryUser(query, function(err, exists) {
@@ -76,6 +80,13 @@ module.exports.registerNewUser = function (query, callback) {
     }
 };
 
+/**
+ * add a given device to a given user
+ * @param user user to add the device to
+ * @param device device to add
+ * @param callback optional function that receives the result of the database action
+ * @returns {*}
+ */
 module.exports.addDeviceToUser = function (user, device, callback) {
     if (usersDB) {
         queryUser({user: user}, function(err, exists) {
@@ -104,6 +115,13 @@ module.exports.addDeviceToUser = function (user, device, callback) {
     }
 };
 
+/**
+ * function that translate a given device name to the ID of the device
+ * @param username string of the user the device is tied to
+ * @param deviceName the name of the device the user registered
+ * @param callback function that receives the ID of the device
+ * @returns {*}
+ */
 module.exports.deviceNameToID = function(username, deviceName, callback) {
     if (usersDB) {
         usersDB.collection(username).find({"devices.name" : deviceName}, {"devices.$": 1}).toArray(function (err, items) {
@@ -122,7 +140,13 @@ module.exports.deviceNameToID = function(username, deviceName, callback) {
     }
 };
 
-//TODO: is this redundant?
+/**
+ * function that translates a device ID to the name the user gave it while registering
+ * @param username string of the user the device is tied to
+ * @param deviceID ID of the queried device
+ * @param callback function that receives the name of the device
+ * @returns {*}
+ */
 module.exports.deviceIDToName = function(username, deviceID, callback) {
     if (usersDB) {
         usersDB.collection(username).find({"devices.id" : deviceID}, {"devices.$": 1}).toArray(function (err, items) {
@@ -141,6 +165,13 @@ module.exports.deviceIDToName = function(username, deviceID, callback) {
     }
 };
 
+/**
+ * checks if a given device name is already taken for a given user
+ * @param username string of the user name
+ * @param deviceName string of the name to query
+ * @param callback function that receives a boolean
+ * @returns {*}
+ */
 module.exports.isNameTaken = function(username, deviceName, callback) {
     if (usersDB) {
         usersDB.collection(username).find({"devices.name" : deviceName}, {"devices.$": 1}).toArray(function (err, items) {
@@ -160,9 +191,9 @@ module.exports.isNameTaken = function(username, deviceName, callback) {
 };
 
 /**
- * 
- * @param query
- * @param callback
+ * check if a username + password combination exists in the database
+ * @param query username and password object
+ * @param callback function that receives a number representing the response
  * @returns {*} 1 on user&pass match, 0 for only user match, -1 for no match
  */
 function queryUser (query, callback) {

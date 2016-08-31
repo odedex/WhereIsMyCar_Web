@@ -1,3 +1,9 @@
+/**
+ * main routing configuration of the server.
+ * contains socket listeners and emitters in addition to express routes
+ * @param app
+ * @param io
+ */
 module.exports = function (app, io) {
 
     var gpsdb = require('./gpsdb.js');
@@ -21,12 +27,19 @@ module.exports = function (app, io) {
     var sessions = {}; // token -> username, time
     var SESSION_TTL = 20*60*1000;
 
+	/**
+	 * check if a given session is within the valid time to live window.
+	 * updates the session timestamp if it is valid, refreshing the window
+	 * @param token token of the session to validate
+	 * @returns {boolean} true iff the session window is valid
+	 */
     function validateSession(token) {
         if (token) {
             var session = sessions[token];
             if (session) {
-                if (new Date() - session.time < SESSION_TTL) {
-                    sessions[token] = {time: new Date(), user: session.user};
+            	var nowTime = new Date();
+                if (nowTime - session.time < SESSION_TTL) {
+                    sessions[token] = {time: nowTime, user: session.user};
                     return true;
                 } else {
                     delete sessions[token];
@@ -36,7 +49,10 @@ module.exports = function (app, io) {
         return false;
     }
 
-    app.get('/', function (req, res) {
+	/**
+	 * redirect to /login page
+	 */
+	app.get('/', function (req, res) {
         if (validateSession(req.session.token)) {
             res.redirect('/devices');
         } else {
@@ -44,6 +60,9 @@ module.exports = function (app, io) {
         }
     });
 
+	/**
+	 * redirect to /devices page
+	 */
     app.get('/devices', function(req, res) {
         if (validateSession(req.session.token)) {
             if (req.session.device) {
@@ -55,6 +74,9 @@ module.exports = function (app, io) {
         }
     });
 
+	/**
+	 * redirect to /gpsmap page
+	 */
     app.get('/gpsmap', function(req, res) {
         if (validateSession(req.session.token) && req.session.device) {
             res.render('gpsmap');
@@ -63,6 +85,9 @@ module.exports = function (app, io) {
         }
     });
 
+	/**
+	 * post function for logging in
+	 */
     app.post('/loginuser', function(req, res) {
         var user = req.body.user,
             pass = req.body.pass;
@@ -88,6 +113,9 @@ module.exports = function (app, io) {
         }
     });
 
+	/**
+	 * post function for registering a new user
+	 */
     app.post('/registeruser', function(req, res) {
         var user = req.body.user,
             pass = req.body.pass;
@@ -108,6 +136,9 @@ module.exports = function (app, io) {
         }
     });
 
+	/**
+	 * post function for logging out
+	 */
     app.post('/logoutuser', function(req, res) {
         var token = req.session.token;
         if (token && sessions[token]) {
@@ -119,6 +150,10 @@ module.exports = function (app, io) {
         }
     });
 
+	/**
+	 * post function for listening to a new device
+	 * server writes the device to the user's session
+	 */
     app.post('/listendevice', function(req, res) {
         if (validateSession(req.session.token)) {
             var device = req.body.device;
@@ -139,6 +174,9 @@ module.exports = function (app, io) {
         }
     });
 
+	/**
+	 * post function for the user to register a new device
+	 */
     app.post('/registrdevicetouser', function(req, res) {
         if (validateSession(req.session.token)) {
             var name = req.body.name,
@@ -215,8 +253,6 @@ module.exports = function (app, io) {
         }
     });
 
-
-
     /**
      * Register a new device to the database
      */
@@ -276,10 +312,16 @@ module.exports = function (app, io) {
         }
     });
 
+	/**
+	 * define all socket events of the server
+	 */
     io.on('connection', function(socket) {
-
         socket.existingRequest = false;
-        socket.on('queryGPSDataBulk', function () {
+
+		/**
+		 * define a socket listen event for requesting all gps data for a device
+		 */
+		socket.on('queryGPSDataBulk', function () {
             var device = socket.handshake.session.device;
             var deviceID = device.id;
             var deviceName = device.name;
@@ -309,7 +351,10 @@ module.exports = function (app, io) {
             });
         });
 
-        socket.on('populateDevicesRequest', function() {
+		/**
+		 * define a socket listen event for requesting all devices for a user
+		 */
+		socket.on('populateDevicesRequest', function() {
             var token = socket.handshake.session.token;
             usersdb.getUserDevices(sessions[token].user, function(deviceArray) {
                 if (deviceArray) {
@@ -321,6 +366,11 @@ module.exports = function (app, io) {
         });
     });
 
+	/**
+	 * generate a new device id hash that does not yet exist in the database
+	 * @param id of the device
+	 * @param callback function that receives the new device id
+	 */
     function generateUniqueDeviceKey(id, callback) {
         var newDeviceKey = sha256(id);
         gpsdb.queryExistingDevice(newDeviceKey, function(err, exists) {
@@ -333,6 +383,11 @@ module.exports = function (app, io) {
     }
 };
 
+/**
+ * check if a given string contains only characters and numbers
+ * @param string string to check
+ * @returns {boolean} true iff the string contains only characters and numbers
+ */
 function isAlphanumeric(string){
     if (!string) {
         return false;
@@ -341,6 +396,10 @@ function isAlphanumeric(string){
 }
 
 var sha256 = require('js-sha256');
+/**
+ * generate a session hash
+ * @param username string of the user
+ */
 function generateSession(username) {
     var date = new Date();
     return (sha256(username + date.toString() + Math.random().toString()));

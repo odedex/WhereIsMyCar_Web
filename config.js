@@ -17,10 +17,4 @@ module.exports = function(app, io){
 
     // Make the files in the public folder available to the world
     app.use(express.static(__dirname + '/public'));
-
-    // In memory session store
-    //var sessionStore  = new expressSession.MemoryStore;
-
-    //app.use(expressSession({secret: 'whateversecret', store: sessionStore}));
-
 };

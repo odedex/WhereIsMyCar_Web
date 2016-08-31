@@ -1,3 +1,6 @@
+/**
+ * main application file of the program
+ */
 var express = require('express'),
     app = express(),
     port = process.env.PORT || 80,
