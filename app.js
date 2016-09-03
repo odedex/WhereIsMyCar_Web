@@ -24,8 +24,8 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 
 io.use(sharedsession(session));
 
-require('./config')(app, io);
-require('./routes')(app, io);
+require('./server/config')(app, io);
+require('./server/routes')(app, io);
 
 console.log('Application is running on port ' + port);
 

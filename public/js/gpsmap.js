@@ -114,7 +114,7 @@ $(function() {
         var marker = new google.maps.Marker({
             map: map,
             //place: {location: place.originalLocation, placeId: place.placeID},
-            animation: google.maps.Animation.DROP,
+            // animation: google.maps.Animation.DROP,
             //label: labels[labelIndex++ % labels.length],
             position: pos
         });
