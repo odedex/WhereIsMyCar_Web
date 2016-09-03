@@ -163,7 +163,7 @@ $(function() {
             $(this).data('mapMarker').markerInfoWindowClose();
         });
 
-        li.append(time.toString()); //TODO: need to adjust for time zones?
+        li.append(time);
 
         if(idx === 0) {
             routeSteps.prepend(li);
