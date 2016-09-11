@@ -14,6 +14,11 @@ var express = require('express'),
     cookieParser = require('cookie-parser');
     sharedsession = require("express-socket.io-session");
 
+process.on('uncaughtException', function (err) {
+	console.error(err);
+	console.log("Node NOT Exiting...");
+});
+
 app.use(cookieParser());
 app.use(session);
 
