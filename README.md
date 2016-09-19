@@ -6,6 +6,7 @@ The project is composed of 3 parts: a web client, a server and a raspberry pi co
 
 ## Compile and installation
 Download the Raspberry Pi installer to your Pi device, which should be running an OS supporting python.
+Install ShareGPS on your Android Device by using this guide: http://www.jillybunch.com/sharegps/user.html
 Register your device on the web client and you are good to go!
 
 ## Usage
